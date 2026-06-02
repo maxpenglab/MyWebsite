@@ -8,7 +8,8 @@ export async function getStaticPaths() {
 }
 
 const { entry } = Astro.props;
-const { Content } = await render(entry);
+const { Content, headings } = await render(entry);
+const h2s = headings.filter((h) => h.depth === 2);
 const d = entry.data;
 const isPersonal = d.project === '个人作品';
 const media = d.video || d.cover || d.poster;
@@ -46,4 +47,29 @@ const dirStyle = `--c:var(--dir-${d.direction}); --c-soft:var(--dir-${d.directio
 
     <div class="prose"><Content /></div>
   </article>
+
+  {h2s.length > 1 && (
+    <nav class="toc" aria-label="本文目录">
+      <p class="toc-label">目录</p>
+      <ul>
+        {h2s.map((h) => (
+          <li><a href={`#${h.slug}`} class="toc-link" data-slug={h.slug}>{h.text}</a></li>
+        ))}
+      </ul>
+    </nav>
+  )}
 </Base>
+
+<script is:inline>
+  const links = document.querySelectorAll('.toc-link');
+  if (links.length) {
+    const activate = (slug) => links.forEach((l) => l.classList.toggle('active', l.dataset.slug === slug));
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((e) => { if (e.isIntersecting) activate(e.target.id); }),
+      { rootMargin: '-5% 0% -72% 0%', threshold: 0 }
+    );
+    links.forEach((l) => { const el = document.getElementById(l.dataset.slug); if (el) io.observe(el); });
+    // 默认高亮第一项
+    if (links[0]) activate(links[0].dataset.slug);
+  }
+</script>

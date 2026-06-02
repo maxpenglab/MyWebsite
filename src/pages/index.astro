@@ -123,6 +123,84 @@ for (let r = 0; r < MR; r++) {
   </section>
 
   <script is:inline>
+    // ── 卡片 3D 磁性倾斜 ──
+    document.querySelectorAll('.card').forEach((card) => {
+      card.addEventListener('mouseenter', () => card.classList.add('is-tilting'));
+      card.addEventListener('mousemove', (e) => {
+        const r = card.getBoundingClientRect();
+        const rx = ((e.clientY - r.top)  / r.height - 0.5) * -12;
+        const ry = ((e.clientX - r.left) / r.width  - 0.5) * 10;
+        card.style.transform = `translateY(-4px) perspective(900px) rotateX(${rx.toFixed(1)}deg) rotateY(${ry.toFixed(1)}deg)`;
+      });
+      card.addEventListener('mouseleave', () => {
+        card.classList.remove('is-tilting');
+        card.style.transform = '';
+      });
+    });
+
+    // ── 卡片媒体内视差（图片/视频跟随光标反向位移，「窗口看场景」感）──
+    document.querySelectorAll('.card').forEach((card) => {
+      const media = card.querySelector('.card-media img, .card-media video');
+      if (!media) return;
+      card.addEventListener('mouseenter', () => { media.style.transition = 'none'; });
+      card.addEventListener('mousemove', (e) => {
+        const r = card.getBoundingClientRect();
+        const x = ((e.clientX - r.left) / r.width  - 0.5) * 10;
+        const y = ((e.clientY - r.top)  / r.height - 0.5) *  7;
+        media.style.transform = `scale(1.07) translate(${-x}px, ${-y}px)`;
+      });
+      card.addEventListener('mouseleave', () => {
+        media.style.transition = '';
+        media.style.transform = '';
+      });
+    });
+
+    // 拖拽精选时重置所有卡片状态，避免 pointer-events:none 导致 mouseleave 丢失
+    const railEl = document.getElementById('featrail');
+    if (railEl) {
+      railEl.addEventListener('pointerdown', () => {
+        railEl.querySelectorAll('.card').forEach((c) => {
+          c.classList.remove('is-tilting');
+          c.style.removeProperty('--card-rx');
+          c.style.removeProperty('--card-ry');
+          const m = c.querySelector('.card-media img, .card-media video');
+          if (m) m.style.transform = '';
+        });
+      });
+    }
+
+    // ── Hero 线框视差 + Motif 视差（lerp 惯性，有机漂移感）──
+    const heroSec    = document.querySelector('.hero');
+    const heroVisual = document.querySelector('.hero-visual');
+    const motifSvg   = document.querySelector('.motif svg');
+
+    let htx = 0, hty = 0, hcx = 0, hcy = 0;   // hero target / current
+    let mtx = 0, mcx = 0;                        // motif target / current
+
+    const tick = () => {
+      hcx += (htx - hcx) * 0.055;
+      hcy += (hty - hcy) * 0.055;
+      mcx += (mtx - mcx) * 0.035;               // motif 更慢，更飘
+      if (heroVisual) heroVisual.style.transform = `translate(${hcx * -22}px, ${hcy * -16}px)`;
+      if (motifSvg)   motifSvg.style.transform   = `translate(calc(-50% + ${mcx * -28}px), -50%)`;
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+
+    document.addEventListener('mousemove', (e) => {
+      if (heroSec) {
+        const r = heroSec.getBoundingClientRect();
+        htx = (e.clientX - r.left) / r.width  - 0.5;
+        hty = (e.clientY - r.top)  / r.height - 0.5;
+      }
+      // motif 跟随全局鼠标横向位置
+      mtx = e.clientX / window.innerWidth - 0.5;
+    });
+    // 鼠标离开视口时缓回中心
+    document.addEventListener('mouseleave', () => { htx = 0; hty = 0; mtx = 0; });
+  </script>
+
+  <script is:inline>
     const buttons = document.querySelectorAll('.filter');
     const cards = document.querySelectorAll('#work-grid .card');
     buttons.forEach((btn) => btn.addEventListener('click', () => {

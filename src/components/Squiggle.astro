@@ -5,10 +5,10 @@
 interface Props { variant?: number; color?: string; }
 // 每组两条：上面一条(y≈7) 与 下面一条(y≈15)，平缓、略有差异、不重叠
 const sets = [
-  { top: "M5 9 C 90 7, 200 11, 355 8",   bot: "M355 14 C 250 12, 120 15, 5 13" },
-  { top: "M5 8 C 100 11, 210 7, 355 10", bot: "M355 14 C 240 16, 110 12, 5 14" },
-  { top: "M5 10 C 95 8, 205 12, 355 9",  bot: "M355 13 C 250 15, 120 12, 5 14" },
-  { top: "M5 9 C 110 12, 190 8, 355 10", bot: "M355 14 C 230 12, 100 15, 5 13" },
+  { top: "M5 9 C 90 5, 200 13, 355 8",   bot: "M355 14 C 250 10, 120 17, 5 13" },
+  { top: "M5 8 C 100 13, 210 5, 355 10", bot: "M355 14 C 240 18, 110 10, 5 14" },
+  { top: "M5 10 C 95 6, 205 14, 355 9",  bot: "M355 13 C 250 17, 120 10, 5 14" },
+  { top: "M5 9 C 110 14, 190 6, 355 10", bot: "M355 14 C 230 10, 100 17, 5 13" },
 ];
 const { variant, color = "var(--accent)" } = Astro.props;
 const idx = (variant ?? Math.floor(Math.random() * sets.length)) % sets.length;
