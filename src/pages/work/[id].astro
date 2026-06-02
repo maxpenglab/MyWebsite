@@ -1,0 +1,49 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects');
+  return projects.map((p) => ({ params: { id: p.id }, props: { entry: p } }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const d = entry.data;
+const isPersonal = d.project === '个人作品';
+const media = d.video || d.cover || d.poster;
+// 方向色：贯穿整页主色
+const dirStyle = `--c:var(--dir-${d.direction}); --c-soft:var(--dir-${d.direction}-soft)`;
+---
+<Base title={`${d.title} · 彭洋 Max Peng`}>
+  <article class="wrap case" style={dirStyle}>
+    <a href="/#work" class="case-back">← 返回作品</a>
+
+    <div class="case-metas">
+      {isPersonal
+        ? <span class="meta meta-personal"><span class="meta-key"></span><span class="dot"></span>个人作品</span>
+        : <span class="meta meta-project"><span class="meta-key"></span><span class="dot"></span>{d.project}</span>}
+      <span class="meta meta-dir"><span class="meta-key"></span><span class="dot"></span>{d.direction}</span>
+    </div>
+
+    <h1>{d.title}</h1>
+
+    <p class="case-role">
+      {isPersonal
+        ? <span>个人独立项目</span>
+        : (d.role
+            ? <span>我负责：<b>{d.role}</b></span>
+            : <span><i>（待补：你在该项目中的个人职责）</i></span>)}
+    </p>
+
+    {media && (
+      <div class="case-media">
+        {d.video
+          ? <video src={d.video} poster={d.poster} controls muted loop playsinline></video>
+          : <img src={d.cover || d.poster} alt={d.title} />}
+      </div>
+    )}
+
+    <div class="prose"><Content /></div>
+  </article>
+</Base>

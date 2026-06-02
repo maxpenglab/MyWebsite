@@ -1,0 +1,197 @@
+---
+import Base from '../layouts/Base.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import Squiggle from '../components/Squiggle.astro';
+import { getCollection } from 'astro:content';
+
+const all = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
+const featured = all.filter((p) => p.data.featured);
+const directions = ['全部', '渲染', '特效', '优化', '动画', '美术流程'];
+
+// —— Hero 线框高度场（构建期生成，静态 SVG）——
+const COLS = 17, ROWS = 12, W = 560, H = 440;
+const grid: [number, number][][] = [];
+for (let j = 0; j < ROWS; j++) {
+  const t = j / (ROWS - 1);
+  const persp = 0.34 + t * 0.66;
+  const rowY = 70 + Math.pow(t, 1.6) * (H - 110);
+  const row: [number, number][] = [];
+  for (let i = 0; i < COLS; i++) {
+    const u = i / (COLS - 1) - 0.5;
+    const x = W / 2 + u * W * persp;
+    const wave = Math.sin(u * Math.PI * 2.2 + t * 2.6) * (6 + t * 26);
+    row.push([+(x).toFixed(1), +(rowY - wave).toFixed(1)]);
+  }
+  grid.push(row);
+}
+const hLines = grid.map((row) => row.map((p) => p.join(',')).join(' '));
+const vLines: string[] = [];
+for (let i = 0; i < COLS; i++) vLines.push(grid.map((row) => row[i].join(',')).join(' '));
+
+// —— 区块间的母题：一片轻微起伏的点阵 + 连线（极淡，填补留白）——
+const MC = 30, MR = 5, MW = 1100, MH = 150;
+const dots: { x: number; y: number }[] = [];
+const mLines: string[] = [];
+for (let r = 0; r < MR; r++) {
+  const rowPts: string[] = [];
+  for (let c = 0; c < MC; c++) {
+    const x = (c / (MC - 1)) * MW;
+    const y = MH / 2 + Math.sin(c * 0.5 + r * 0.9) * (6 + r * 4) + (r - MR / 2) * 16;
+    dots.push({ x: +x.toFixed(1), y: +y.toFixed(1) });
+    rowPts.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+  }
+  mLines.push(rowPts.join(' '));
+}
+---
+<Base title="彭洋 Max Peng · 技术美术">
+  <!-- Hero -->
+  <section class="wrap hero">
+    <div class="hero-watermark" aria-hidden="true">MAXPENG</div>
+    <div class="hero-grid">
+      <div class="hero-text">
+        <div class="hero-hi rise" style="animation-delay:.05s">欢迎来到我的作品集</div>
+        <h1 class="rise" style="animation-delay:.12s"><span class="grad">Max Peng</span></h1>
+        <div class="hero-role rise" style="animation-delay:.2s">Technical Artist</div>
+        <p class="hero-intro rise" style="animation-delay:.28s">
+          我是一名技术美术，目前在<b>网易</b>参与《明日之后》《七日世界》等在产项目。
+          擅长渲染与性能优化，做<b>能上线的工程级效果</b>而非演示级 demo——参与多项渲染技术研发并成功申请一项专利，
+          同时在把 AI 推进到可用的美术生产管线。
+        </p>
+        <div class="hero-actions rise" style="animation-delay:.36s">
+          <a href="#work" class="btn btn-primary">查看作品</a>
+          <a href="/resume.pdf" class="btn btn-ghost" download>下载简历</a>
+        </div>
+      </div>
+      <div class="hero-visual rise" style="animation-delay:.3s" aria-hidden="true">
+        <svg viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg">
+          {vLines.map((pts) => <polyline class="wire-v" points={pts} />)}
+          {hLines.map((pts) => <polyline class="wire-h" points={pts} />)}
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- 精选：横向滚动 -->
+  <section class="wrap section">
+    <div class="section-head reveal">
+      <h2>精选</h2>
+      <Squiggle variant={0} />
+    </div>
+    <div class="rail-meta reveal" aria-hidden="true">
+      <span class="rail-count" id="rail-count">01 / {featured.length}</span>
+      <span class="rail-scroll"><span>SCROLL</span><span class="hero-scroll-line"></span></span>
+    </div>
+    <div class="featrail-wrap">
+      <div class="featrail" id="featrail">
+        {featured.map((p, i) => <ProjectCard id={p.id} index={i} {...p.data} />)}
+      </div>
+    </div>
+  </section>
+
+  <!-- 母题分隔 -->
+  <div class="wrap motif reveal" aria-hidden="true">
+    <svg viewBox={`0 0 ${MW} ${MH}`} xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+      {mLines.map((pts) => <polyline class="m-line" points={pts} />)}
+      {dots.map((d) => <circle class="m-dot" cx={d.x} cy={d.y} r="2.2" />)}
+    </svg>
+  </div>
+
+  <!-- 全部 + 方向筛选 -->
+  <section class="wrap section" id="work">
+    <div class="section-head reveal">
+      <h2>全部</h2>
+      <Squiggle variant={2} />
+    </div>
+    <div class="filters reveal">
+      {directions.map((d, i) => (
+        <button class={`filter${i === 0 ? ' active' : ''}`} data-filter={d}>{d}</button>
+      ))}
+    </div>
+    <div class="grid grid-all" id="work-grid">
+      {all.map((p, i) => <ProjectCard id={p.id} index={i} {...p.data} />)}
+    </div>
+  </section>
+
+  <!-- 收尾：联系 -->
+  <section class="wrap closing reveal">
+    <div class="section-head reveal" style="margin-bottom:18px;">
+      <h2>联系我</h2>
+      <Squiggle variant={1} />
+    </div>
+    <p>想聊聊渲染、性能，或任何有意思的合作？欢迎随时来邮件。</p>
+    <a href="mailto:max_peng@foxmail.com" class="btn btn-primary">max_peng@foxmail.com</a>
+  </section>
+
+  <script is:inline>
+    const buttons = document.querySelectorAll('.filter');
+    const cards = document.querySelectorAll('#work-grid .card');
+    buttons.forEach((btn) => btn.addEventListener('click', () => {
+      const f = btn.getAttribute('data-filter');
+      buttons.forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      cards.forEach((c) => c.classList.toggle('is-hidden', !(f === '全部' || c.getAttribute('data-dir') === f)));
+    }));
+    // 卡片视频 hover 预览
+    document.querySelectorAll('.card-media video').forEach((v) => {
+      const card = v.closest('.card');
+      card.addEventListener('mouseenter', () => v.play().catch(() => {}));
+      card.addEventListener('mouseleave', () => { v.pause(); v.currentTime = 0; });
+    });
+    // 精选：按住卡片左右拖动滚动（不使用 pointer capture，避免吃掉卡片点击）
+    const rail = document.getElementById('featrail');
+    if (rail) {
+      let down = false, startX = 0, startLeft = 0, dragged = false;
+      const onMove = (e) => {
+        if (!down) return;
+        const dx = e.clientX - startX;
+        if (Math.abs(dx) > 6) { dragged = true; rail.classList.add('dragging'); }
+        if (dragged) { rail.scrollLeft = startLeft - dx; e.preventDefault(); }
+      };
+      const onUp = () => {
+        if (!down) return;
+        down = false;
+        rail.classList.remove('dragging');
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        // 拖动结束后，短暂吞掉这一次 click，避免误跳转；纯点击不会触发这里
+        if (dragged) {
+          const swallow = (ev) => { ev.preventDefault(); ev.stopPropagation(); };
+          rail.addEventListener('click', swallow, { capture: true, once: true });
+          setTimeout(() => rail.removeEventListener('click', swallow, true), 60);
+        }
+      };
+      rail.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0 || e.pointerType !== 'mouse') return;  // 仅鼠标左键拖拽；触屏用原生滚动
+        down = true; dragged = false; startX = e.clientX; startLeft = rail.scrollLeft;
+        window.addEventListener('pointermove', onMove, { passive: false });
+        window.addEventListener('pointerup', onUp);
+      });
+      rail.addEventListener('dragstart', (e) => e.preventDefault());
+      rail.addEventListener('wheel', (e) => {
+        if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { rail.scrollLeft += e.deltaY; e.preventDefault(); }
+      }, { passive: false });
+      // 计数器：随横向滚动更新当前卡片序号
+      const counter = document.getElementById('rail-count');
+      const total = rail.querySelectorAll('.card').length;
+      if (counter) {
+        const card0 = rail.querySelector('.card');
+        const step = card0 ? card0.offsetWidth + 24 : 1;
+        rail.addEventListener('scroll', () => {
+          const idx = Math.min(total, Math.round(rail.scrollLeft / step) + 1);
+          counter.textContent = String(idx).padStart(2, '0') + ' / ' + total;
+        }, { passive: true });
+      }
+    }
+    // 内容淡入：进入视口播一次后不再观察
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+
+    // 手绘线：每次滚动进入视口都重新绘制（离开则移除标记，回来再画）
+    const sqio = new IntersectionObserver((entries) => {
+      entries.forEach((e) => e.target.classList.toggle('draw', e.isIntersecting));
+    }, { threshold: 0.6 });
+    document.querySelectorAll('.section-head').forEach((el) => sqio.observe(el));
+  </script>
+</Base>

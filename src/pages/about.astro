@@ -1,0 +1,31 @@
+---
+import Base from '../layouts/Base.astro';
+const skills = [
+  ['游戏引擎', 'Unreal、Unity，能对引擎渲染管线做一定程度的自定义开发'],
+  ['Shader', 'HLSL / GLSL，可独立开发复杂特殊材质效果'],
+  ['美术资产管线', 'Blender、Substance Designer；用 AI 工具加速资产制作并制定生产管线'],
+  ['工具开发', 'Python，为 Maya / Unreal 开发工具插件提升效率'],
+  ['项目经历', '网易《明日之后》《七日世界》《天下》技术美术'],
+  ['教育', '中南林业科技大学 · 本科'],
+];
+---
+<Base title="关于 · 彭洋 Max Peng">
+  <section class="wrap about">
+    <h1 class="rise">关于我</h1>
+    <p class="rise" style="animation-delay:.08s">渲染方向技术美术，拥有扎实的图形学基础与手游项目开发经验。擅长在工程约束下<b>平衡画质与性能</b>，做能上线的效果而非演示级 demo——参与多项渲染技术研发并成功申请一项专利。</p>
+    <p class="rise" style="animation-delay:.14s">我能有效<b>连接美术与程序</b>，兼顾画质提升与性能开销。同时在积极探索 AI 在游戏美术生产管线中的落地，把它推进为可用的工程流程。</p>
+
+    <dl class="skills rise" style="animation-delay:.2s">
+      {skills.map(([k, v]) => (
+        <div class="skill-row"><dt>{k}</dt><dd>{v}</dd></div>
+      ))}
+    </dl>
+
+    <div class="contact rise" style="animation-delay:.26s">
+      <h3>联系我</h3>
+      <p style="color:var(--ink-soft);margin-bottom:10px;">如果有合适的机会或想聊聊技术，欢迎联系。</p>
+      <div>邮箱 · <a href="mailto:max_peng@foxmail.com">max_peng@foxmail.com</a></div>
+      <div style="margin-top:8px;"><a href="/resume.pdf" download>↓ 下载完整简历（PDF）</a></div>
+    </div>
+  </section>
+</Base>

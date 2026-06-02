@@ -1,0 +1,20 @@
+---
+// 手绘马克笔下划线：两条上下靠近、不重叠的平缓笔触
+// sq1 路径从左到右（左端起笔），sq2 路径从右到左书写（右端起笔），
+// 配合 CSS 让两条分别 左→右、右→左 各画一次
+interface Props { variant?: number; color?: string; }
+// 每组两条：上面一条(y≈7) 与 下面一条(y≈15)，平缓、略有差异、不重叠
+const sets = [
+  { top: "M5 9 C 90 7, 200 11, 355 8",   bot: "M355 14 C 250 12, 120 15, 5 13" },
+  { top: "M5 8 C 100 11, 210 7, 355 10", bot: "M355 14 C 240 16, 110 12, 5 14" },
+  { top: "M5 10 C 95 8, 205 12, 355 9",  bot: "M355 13 C 250 15, 120 12, 5 14" },
+  { top: "M5 9 C 110 12, 190 8, 355 10", bot: "M355 14 C 230 12, 100 15, 5 13" },
+];
+const { variant, color = "var(--accent)" } = Astro.props;
+const idx = (variant ?? Math.floor(Math.random() * sets.length)) % sets.length;
+const { top, bot } = sets[idx];
+---
+<svg class="squiggle" viewBox="0 0 360 22" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="none">
+  <path class="sq sq1" d={top} stroke={color} stroke-width="2.6" stroke-linecap="round" />
+  <path class="sq sq2" d={bot} stroke={color} stroke-width="2.6" stroke-linecap="round" />
+</svg>

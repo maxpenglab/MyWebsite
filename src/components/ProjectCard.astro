@@ -1,0 +1,39 @@
+---
+interface Props {
+  id: string;
+  title: string;
+  project: string;
+  direction: string;
+  summary: string;
+  video?: string;
+  poster?: string;
+  cover?: string;
+  index?: number;
+}
+const { id, title, project, direction, summary, video, poster, cover, index = 0 } = Astro.props;
+const img = cover || poster;
+const isPersonal = project === '个人作品';
+const delay = `${(index % 6) * 70}ms`;
+const dirStyle = `--c:var(--dir-${direction}); --c-soft:var(--dir-${direction}-soft); animation-delay:${delay}`;
+---
+<a class="card reveal" style={dirStyle} href={`/work/${id}`} data-dir={direction}>
+  <div class="card-media">
+    {video ? (
+      <video src={video} poster={poster} muted loop playsinline preload="metadata"></video>
+    ) : img ? (
+      <img src={img} alt={title} loading="lazy" />
+    ) : (
+      <span class="ph">{`media: ${id}`}</span>
+    )}
+  </div>
+  <div class="card-body">
+    <h3>{title}</h3>
+    <p class="card-summary">{summary}</p>
+    <div class="metas">
+      {isPersonal
+        ? <span class="meta meta-personal"><span class="meta-key"></span><span class="dot"></span>个人作品</span>
+        : <span class="meta meta-project"><span class="meta-key"></span><span class="dot"></span>{project}</span>}
+      <span class="meta meta-dir"><span class="meta-key"></span><span class="dot"></span>{direction}</span>
+    </div>
+  </div>
+</a>

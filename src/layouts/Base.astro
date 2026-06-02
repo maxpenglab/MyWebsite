@@ -1,0 +1,56 @@
+---
+import '../styles/global.css';
+interface Props { title: string; }
+const { title } = Astro.props;
+---
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content="彭洋 Max Peng — 渲染方向技术美术作品集" />
+    <script is:inline>document.documentElement.classList.add('js')</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- 圆润现代无衬线 + 等宽，柔和不生硬 -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+    <!-- 标题展示体 Clash Grotesk（CDN），加载失败自动回退到 Jakarta -->
+    <link href="https://api.fontshare.com/v2/css?f[]=clash-grotesk@500,600&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="scroll-progress-track" aria-hidden="true"><span class="scroll-progress-bar" id="scroll-progress"></span></div>
+    <header class="wrap">
+      <nav class="nav">
+        <a href="/" class="nav-name">Max<b>Peng</b></a>
+        <div class="nav-links">
+          <a href="/#work">作品</a>
+          <a href="/about">关于</a>
+          <a href="/resume.pdf" class="nav-cta" download>下载简历</a>
+        </div>
+      </nav>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer class="wrap">
+      <div class="foot">
+        <span>© 2026 彭洋 Max Peng</span>
+        <span>max_peng@foxmail.com</span>
+      </div>
+    </footer>
+    <script is:inline>
+      // 顶部细进度条：随页面滚动从左到右填充
+      const bar = document.getElementById('scroll-progress');
+      if (bar) {
+        const onScroll = () => {
+          const h = document.documentElement;
+          const p = h.scrollTop / (h.scrollHeight - h.clientHeight || 1);
+          bar.style.transform = 'scaleX(' + Math.max(0, Math.min(1, p)) + ')';
+        };
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+      }
+    </script>
+  </body>
+</html>

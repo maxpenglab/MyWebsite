@@ -1,0 +1,330 @@
+/* =====================================================================
+   设计系统 — 改这里就能调全站气质
+   方向：深色 · 暖中性灰打底 · 低饱和青铜/墨绿强调 · 圆润字体 · 弱边框分层
+   ===================================================================== */
+:root {
+  /* 背景：暖炭灰，非纯黑，带一点暖意 */
+  --bg:        #16140f;   /* 页面底色 */
+  --bg-2:      #1d1a14;   /* 次级面（卡片底） */
+  --bg-3:      #25211a;   /* 悬浮/高亮面 */
+  --surface:   #1d1a14;
+
+  /* 文字 */
+  --ink:       #f2ede1;   /* 主文字：暖白 */
+  --ink-soft:  #b8b0a0;   /* 次要文字 */
+  --ink-faint: #8a8170;   /* 提示/元信息 */
+
+  /* 强调：低饱和青铜金 + 辅助墨绿 */
+  --accent:      #c8a26b; /* 主强调：青铜金 */
+  --accent-soft: rgba(200,162,107,.14);
+  --accent-2:    #7fa07a; /* 辅助：墨绿（用于方向标签等） */
+
+  /* 方向色：每个方向一个低饱和色，用于该方向的标签与卡片细节（有信息含义，非装饰）
+     成对出现：--dir-X 实色 / --dir-X-soft 透明底 */
+  --dir-渲染:   #c8a26b;  --dir-渲染-soft:   rgba(200,162,107,.13);  /* 青铜金 */
+  --dir-特效:   #d08a6a;  --dir-特效-soft:   rgba(208,138,106,.13);  /* 暖陶土 */
+  --dir-优化:   #6ab0a0;  --dir-优化-soft:   rgba(106,176,160,.13);  /* 青绿 */
+  --dir-动画:   #9a8cc0;  --dir-动画-soft:   rgba(154,140,192,.14);  /* 低饱和紫 */
+  --dir-美术流程: #7fa07a; --dir-美术流程-soft: rgba(127,160,122,.13); /* 墨绿 */
+
+  /* 线与分层 */
+  --line:    rgba(242,237,225,.09);  /* 极淡描边，代替硬边框 */
+  --line-2:  rgba(242,237,225,.14);
+  --radius:  14px;
+  --radius-sm: 9px;
+  --shadow:  0 1px 2px rgba(0,0,0,.4), 0 8px 30px rgba(0,0,0,.28);
+  --shadow-lg: 0 2px 6px rgba(0,0,0,.45), 0 18px 50px rgba(0,0,0,.4);
+
+  --maxw: 1080px;
+
+  /* 字体：圆润现代无衬线，避免生硬；标题用稍有个性的几何体 */
+  --font-sans: "Plus Jakarta Sans", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --font-disp: "Clash Grotesk", "Plus Jakarta Sans", "PingFang SC", sans-serif;
+  --font-mono: "Space Mono", "SFMono-Regular", Menlo, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+  /* 背景氛围：更饱满的青铜辉光 + 辅助冷调 + 暗角，制造层次而非平涂 */
+  background-image:
+    radial-gradient(1100px 620px at 76% -6%, rgba(200,162,107,.16), transparent 62%),
+    radial-gradient(760px 520px at 2% 4%, rgba(127,160,122,.07), transparent 56%),
+    radial-gradient(120% 120% at 50% 0%, transparent 60%, rgba(0,0,0,.35) 100%);
+  background-attachment: fixed;
+  position: relative;
+}
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  opacity: .035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+main, header, footer { position: relative; z-index: 1; }
+/* 全局网格母题：固定在最底层，极淡，让深色背景不再大片纯色（不运动）*/
+body::after {
+  content: ""; position: fixed; inset: -2px; pointer-events: none; z-index: 0;
+  background-image:
+    linear-gradient(to right, rgba(200,162,107,.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(200,162,107,.05) 1px, transparent 1px);
+  background-size: 64px 64px;
+  /* 中心稍亮、四周淡出，避免均匀网格的呆板 */
+  -webkit-mask-image: radial-gradient(120% 90% at 70% 0%, #000 0%, rgba(0,0,0,.35) 55%, transparent 85%);
+  mask-image: radial-gradient(120% 90% at 70% 0%, #000 0%, rgba(0,0,0,.35) 55%, transparent 85%);
+}
+
+.wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 28px; }
+a { color: inherit; text-decoration: none; }
+
+/* ============ 顶部滚动进度条 ============ */
+.scroll-progress-track { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 50; pointer-events: none; }
+.scroll-progress-bar { display: block; height: 100%; width: 100%; transform: scaleX(0); transform-origin: left center; background: linear-gradient(to right, var(--accent-2), var(--accent)); box-shadow: 0 0 10px rgba(200,162,107,.4); }
+
+/* 入场动画：统一的淡入上浮，用 animation-delay 错峰 */
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.rise { animation: rise .7s cubic-bezier(.2,.7,.2,1) both; }
+
+/* 滚动淡入：进入视口时出现一次然后静止（非持续动效）。
+   .js 作用域确保关闭 JS 时内容照常可见；同时尊重系统“减少动态”。 */
+.js .reveal { opacity: 0; }
+.js .reveal.in { animation: rise .7s cubic-bezier(.2,.7,.2,1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .rise, .js .reveal, .js .reveal.in { animation: none !important; opacity: 1 !important; transform: none !important; }
+}
+
+/* 区块标题下的引导语 */
+.section-intro { color: var(--ink-soft); font-size: 15.5px; max-width: 52ch; margin: 16px auto 34px; text-align: center; }
+
+/* 首页收尾：联系区 */
+.closing { margin-top: 36px; padding: 84px 0 64px; text-align: center; border-top: 1px solid var(--line); }
+.closing .eyebrow { font-family: var(--font-mono); font-size: 13px; color: var(--accent); margin-bottom: 16px; }
+.closing h2 { font-family: var(--font-disp); font-size: clamp(28px, 4.5vw, 40px); font-weight: 600; letter-spacing: -.02em; margin-bottom: 16px; }
+.closing p { color: var(--ink-soft); font-size: 16.5px; max-width: 46ch; margin: 0 auto 28px; }
+
+/* ============ 顶栏 ============ */
+.nav { display: flex; align-items: center; justify-content: space-between; padding: 26px 0; }
+.nav-name { font-family: var(--font-disp); font-size: 18px; font-weight: 600; letter-spacing: -.01em; }
+.nav-name b { color: var(--accent); font-weight: 600; }
+.nav-links { display: flex; align-items: center; gap: 26px; font-size: 14.5px; }
+.nav-links a { color: var(--ink-soft); transition: color .2s; }
+.nav-links a:hover { color: var(--ink); }
+.nav-cta {
+  font-size: 13.5px; color: var(--bg) !important; background: var(--accent);
+  padding: 8px 16px; border-radius: 999px; font-weight: 600; transition: .2s;
+}
+.nav-cta:hover { filter: brightness(1.08); transform: translateY(-1px); }
+
+/* ============ Hero（两栏 + 名字水印 + 线框视觉）============ */
+.hero { position: relative; padding: 96px 0 80px; overflow: visible; }
+/* 超大、描边、倾斜的名字水印，铺在首屏背景 */
+.hero-watermark {
+  position: absolute; top: -10px; right: -4%; z-index: 0; pointer-events: none;
+  font-family: var(--font-disp); font-weight: 600; font-size: clamp(120px, 19vw, 300px);
+  line-height: .82; letter-spacing: -.03em; white-space: nowrap;
+  transform: rotate(-7deg); transform-origin: top right;
+  color: transparent; -webkit-text-stroke: 1.4px rgba(200,162,107,.16); text-stroke: 1.4px rgba(200,162,107,.16);
+  user-select: none;
+}
+.hero-grid { position: relative; z-index: 1; display: grid; grid-template-columns: 1.15fr .85fr; gap: 40px; align-items: center; }
+.hero-text { max-width: 60ch; }
+.hero-hi { font-family: var(--font-mono); font-size: 14px; color: var(--accent); letter-spacing: .02em; margin-bottom: 20px; }
+.hero-hi::before { content: "// "; opacity: .6; }
+.hero h1 { font-family: var(--font-disp); font-size: clamp(44px, 6.5vw, 74px); line-height: 1.02; font-weight: 600; letter-spacing: -.025em; margin-bottom: 10px; }
+.hero h1 .grad { background: linear-gradient(100deg, var(--ink) 30%, var(--accent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero-role { font-family: var(--font-disp); font-size: clamp(20px, 3vw, 27px); color: var(--ink-soft); font-weight: 500; margin-bottom: 28px; }
+.hero-role b { color: var(--accent-2); font-weight: 500; }
+.hero-intro { font-size: 17px; color: var(--ink-soft); margin-bottom: 18px; }
+.hero-intro b { color: var(--ink); font-weight: 600; }
+.hero-actions { display: flex; gap: 14px; align-items: center; margin-top: 30px; }
+/* 右侧线框高度场视觉 + 视口取景框 */
+.hero-visual { position: relative; }
+.viewport { position: relative; padding: 18px; }
+.viewport svg { width: 100%; height: auto; display: block; filter: drop-shadow(0 0 30px rgba(200,162,107,.06)); }
+.hero-visual .wire-h { stroke: rgba(200,162,107,.22); }
+.hero-visual .wire-v { stroke: rgba(127,160,122,.16); }
+.hero-visual .wire-h, .hero-visual .wire-v { fill: none; stroke-width: 1; }
+/* 四角取景括号，像相机/视口 UI */
+/* 精选区头部的等宽小标注：计数 + SCROLL 提示，紧贴可横滑的卡片 */
+.rail-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .12em; color: var(--ink-faint); }
+.rail-count { color: var(--accent); }
+.rail-scroll { display: inline-flex; align-items: center; gap: 12px; }
+.hero-scroll-line { width: 54px; height: 1px; background: linear-gradient(to right, var(--accent), transparent); position: relative; overflow: hidden; display: inline-block; vertical-align: middle; }
+.hero-scroll-line::after { content: ""; position: absolute; top: 0; left: 0; width: 18px; height: 100%; background: var(--accent); animation: scrolldash 2.2s cubic-bezier(.6,.1,.3,1) infinite; }
+@keyframes scrolldash { 0% { transform: translateX(-18px); } 60%,100% { transform: translateX(54px); } }
+@media (prefers-reduced-motion: reduce) { .hero-scroll-line::after { animation: none; } }
+
+.btn { font-size: 14.5px; font-weight: 600; padding: 12px 22px; border-radius: 999px; transition: .2s; }
+.btn-primary { background: var(--accent); color: var(--bg); }
+.btn-primary:hover { filter: brightness(1.08); transform: translateY(-2px); box-shadow: 0 10px 30px rgba(200,162,107,.25); }
+.btn-ghost { color: var(--ink); border: 1px solid var(--line-2); }
+.btn-ghost:hover { background: var(--bg-2); border-color: var(--accent); }
+
+/* ============ 区块标题（居中 · 放大 · 进场画线）============ */
+.section { padding: 64px 0 34px; }
+.section-head { text-align: center; margin-bottom: 30px; }
+.section-head h2 { font-family: var(--font-disp); font-size: clamp(32px, 5vw, 46px); font-weight: 600; letter-spacing: -.02em; line-height: 1.05; }
+/* 手绘马克笔下划线：两条上下靠近、不重叠的笔触；
+   滚动进入视口触发：第一条左→右画出，第二条随后右→左画出，画完即停（不循环） */
+.squiggle { display: block; width: 140px; height: 22px; margin: 12px auto 0; overflow: visible; }
+.squiggle .sq { stroke-dasharray: 380; stroke-dashoffset: 380; }
+.js .squiggle .sq { stroke-dashoffset: 380; }
+/* 进入视口(.draw)时绘制：sq1 左→右、sq2 随后右→左；离开则复位，下次再画 */
+.js .section-head.draw .sq1 { animation: sq-draw .5s cubic-bezier(.6,.05,.35,1) .05s forwards; }
+.js .section-head.draw .sq2 { animation: sq-draw .5s cubic-bezier(.6,.05,.35,1) .5s forwards; }
+.section-head:not(.js *) .sq { stroke-dashoffset: 0; }   /* 无 JS 兜底：直接显示 */
+@keyframes sq-draw { to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .squiggle .sq { stroke-dashoffset: 0 !important; animation: none !important; }
+}
+
+/* ============ 作品卡片 ============ */
+.grid { display: grid; gap: 24px; }
+.grid-all { grid-template-columns: repeat(3, 1fr); }
+
+/* 精选：单行横向滚动 */
+.featrail-wrap { position: relative; }
+.featrail {
+  display: grid; grid-auto-flow: column; grid-auto-columns: minmax(340px, 38%);
+  gap: 24px; overflow-x: auto; scroll-snap-type: x mandatory;
+  padding: 14px 2px 24px;
+  scrollbar-width: none;            /* 隐藏底部滚动条，用拖拽代替 */
+  cursor: grab;
+  user-select: none;               /* 拖拽时不会选中卡片文字 */
+  -webkit-user-select: none;
+}
+.featrail .card, .featrail img, .featrail video { -webkit-user-drag: none; user-drag: none; }
+.featrail a { -webkit-user-drag: none; }
+.featrail::-webkit-scrollbar { display: none; }
+.featrail.dragging { cursor: grabbing; scroll-snap-type: none; scroll-behavior: auto; }
+.featrail.dragging .card { pointer-events: none; }   /* 拖拽时不触发卡片点击 */
+.featrail .card { scroll-snap-align: start; }
+/* 右侧渐隐：只暗示右边还有更多；左侧首卡贴住容器左缘，不被遮挡 */
+.featrail-wrap { position: relative; }
+.featrail-wrap::after {
+  content: ""; position: absolute; top: 0; right: 0; bottom: 24px; width: 56px;
+  pointer-events: none; z-index: 2; background: linear-gradient(to left, var(--bg), transparent);
+}
+.featrail-hint { text-align: center; font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-faint); margin-top: 2px; letter-spacing: .04em; }
+.featrail-hint::before { content: "⇠  "; opacity: .6; } .featrail-hint::after { content: "  ⇢"; opacity: .6; }
+
+/* 精选卡片：悬浮态——去描边、极淡底色、柔阴影 */
+.featrail .card { background: var(--bg-2); border-color: transparent; box-shadow: var(--shadow); }
+.featrail .card:hover { box-shadow: var(--shadow-lg); border-color: transparent; }
+
+.card {
+  position: relative; display: flex; flex-direction: column;
+  background: var(--bg-2); border: 1px solid var(--line);
+  border-radius: var(--radius); overflow: hidden;
+  transition: transform .3s cubic-bezier(.2,.7,.2,1), border-color .3s, box-shadow .3s;
+}
+/* 顶部一条细方向色条（默认极淡，hover 显现）*/
+.card::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; z-index: 3;
+  background: var(--c, var(--accent)); opacity: .55; transition: opacity .3s;
+}
+.card:hover { transform: translateY(-4px); border-color: color-mix(in srgb, var(--c, var(--accent)) 45%, transparent); box-shadow: var(--shadow-lg); }
+.card:hover::before { opacity: 1; }
+.card-media { position: relative; aspect-ratio: 16/10; background: #0e0c08; overflow: hidden; }
+.card-media video, .card-media img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s ease; }
+.card:hover .card-media video, .card:hover .card-media img { transform: scale(1.04); }
+.card-media .ph { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #4a4538; font-family: var(--font-mono); font-size: 12px; }
+/* 媒体底部渐隐，让叠加的标识更清晰 */
+.card-media::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(14,12,8,.55), transparent 45%); pointer-events: none; }
+
+/* 标签：带前缀，明确区分「项目」「个人作品」与「方向」 */
+.card-body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
+.card-body h3 { font-family: var(--font-disp); font-size: 19px; font-weight: 600; letter-spacing: -.01em; }
+.card-summary { font-size: 14.5px; color: var(--ink-soft); line-height: 1.6; }
+.metas { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
+.meta { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 11.5px; padding: 4px 10px; border-radius: 7px; }
+.meta-key { color: var(--ink-faint); }
+.meta-project { background: var(--bg-3); color: var(--ink-soft); }
+.meta-project .meta-key::before { content: "项目"; }
+.meta-personal { background: var(--c-soft, var(--accent-soft)); color: var(--c, var(--accent)); }
+.meta-personal .meta-key::before { content: "类型"; }
+.meta-dir { background: var(--c-soft, var(--accent-soft)); color: var(--c, var(--accent)); }
+.meta-dir .meta-key::before { content: "方向"; }
+.meta .dot { width: 3px; height: 3px; border-radius: 50%; background: currentColor; opacity: .5; }
+
+/* ============ 方向筛选 ============ */
+.filters { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 34px; }
+.filter { font-family: var(--font-mono); font-size: 13px; padding: 7px 16px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-soft); background: none; cursor: pointer; transition: .18s; }
+.filter:hover { color: var(--ink); border-color: var(--line-2); }
+.filter.active { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 600; }
+.filter.active[data-filter="渲染"]   { background: var(--dir-渲染);   border-color: var(--dir-渲染); }
+.filter.active[data-filter="特效"]   { background: var(--dir-特效);   border-color: var(--dir-特效); }
+.filter.active[data-filter="优化"]   { background: var(--dir-优化);   border-color: var(--dir-优化); }
+.filter.active[data-filter="动画"]   { background: var(--dir-动画);   border-color: var(--dir-动画); }
+.filter.active[data-filter="美术流程"] { background: var(--dir-美术流程); border-color: var(--dir-美术流程); }
+.is-hidden { display: none !important; }
+
+/* ============ 区块间的低调线框母题（填充留白，极淡，不抢内容）============ */
+.motif { position: relative; height: 150px; margin: 8px 0; overflow: hidden; pointer-events: none; }
+.motif svg { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(1100px, 120%); height: auto; }
+.motif .m-line { fill: none; stroke: var(--accent); stroke-width: 1; opacity: .1; }
+.motif .m-dot { fill: var(--accent-2); opacity: .14; }
+@media (max-width: 560px) { .motif { height: 96px; } }
+
+/* ============ 详情页 ============ */
+.case { position: relative; padding: 50px 0 80px; max-width: 780px; margin: 0 auto; }
+.case-back { font-family: var(--font-mono); font-size: 13px; color: var(--ink-faint); display: inline-block; margin-bottom: 30px; transition: color .2s; }
+.case-back:hover { color: var(--c, var(--accent)); }
+.case-metas { display: flex; gap: 8px; margin-bottom: 18px; }
+.case h1 { font-family: var(--font-disp); font-size: clamp(30px, 5vw, 44px); line-height: 1.08; font-weight: 600; letter-spacing: -.02em; margin-bottom: 16px; }
+.case-role { font-size: 15px; color: var(--ink-soft); margin-bottom: 32px; padding-left: 14px; border-left: 2px solid var(--c, var(--accent)); }
+.case-role b { color: var(--ink); font-weight: 600; }
+.case-role i { color: var(--ink-faint); font-style: italic; }
+.case-media { aspect-ratio: 16/9; background: #0e0c08; border-radius: var(--radius); overflow: hidden; margin-bottom: 40px; box-shadow: var(--shadow); position: relative; }
+.case-media video, .case-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.case-media .ph { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #4a4538; font-family: var(--font-mono); font-size: 13px; }
+
+.prose h2 { font-family: var(--font-disp); font-size: 22px; font-weight: 600; margin: 40px 0 14px; letter-spacing: -.01em; }
+.prose h2::before { content: "— "; color: var(--c, var(--accent)); }
+.prose p { margin-bottom: 16px; color: var(--ink-soft); }
+.prose ul, .prose ol { margin: 0 0 18px 4px; list-style: none; }
+.prose li { margin-bottom: 10px; color: var(--ink-soft); padding-left: 22px; position: relative; }
+.prose li::before { content: "▸"; position: absolute; left: 0; color: var(--c, var(--accent)); }
+.prose strong { color: var(--ink); font-weight: 600; }
+.prose code { font-family: var(--font-mono); font-size: 13.5px; background: var(--bg-3); color: var(--c, var(--accent)); padding: 2px 7px; border-radius: 6px; }
+.prose blockquote { border-left: 2px solid var(--c-soft, var(--line-2)); padding: 4px 0 4px 18px; margin: 18px 0; color: var(--ink-faint); font-size: 14.5px; }
+
+/* ============ 关于页 ============ */
+.about { padding: 50px 0 80px; max-width: 760px; }
+.about h1 { font-family: var(--font-disp); font-size: clamp(30px, 5vw, 42px); font-weight: 600; letter-spacing: -.02em; margin-bottom: 26px; }
+.about p { color: var(--ink-soft); font-size: 17px; margin-bottom: 16px; }
+.about p b { color: var(--ink); font-weight: 600; }
+.skills { margin-top: 38px; }
+.skill-row { display: grid; grid-template-columns: 150px 1fr; gap: 16px; padding: 18px 0; border-top: 1px solid var(--line); }
+.skill-row dt { font-family: var(--font-mono); font-size: 13px; color: var(--accent); }
+.skill-row dd { font-size: 15.5px; color: var(--ink-soft); }
+.contact { margin-top: 42px; padding: 28px; background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--radius); }
+.contact h3 { font-family: var(--font-disp); font-size: 20px; margin-bottom: 14px; }
+.contact a { color: var(--accent); }
+
+/* ============ 页脚 ============ */
+.foot { margin-top: 40px; border-top: 1px solid var(--line); padding: 30px 0 50px; display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 12.5px; color: var(--ink-faint); }
+
+/* ============ 响应式 ============ */
+body { overflow-x: clip; }   /* 裁掉水印溢出，避免横向滚动 */
+@media (max-width: 920px) {
+  .hero-grid { grid-template-columns: 1fr; gap: 0; }
+  .hero-visual { display: none; }       /* 窄屏隐藏线框视觉 */
+  .hero-watermark { font-size: clamp(96px, 26vw, 200px); opacity: .8; }
+}
+@media (max-width: 820px) {
+  .grid-all { grid-template-columns: repeat(2, 1fr); }
+  .featrail { grid-auto-columns: minmax(300px, 72%); }
+}
+@media (max-width: 560px) {
+  .grid-all { grid-template-columns: 1fr; }
+  .featrail { grid-auto-columns: minmax(260px, 86%); }
+  .skill-row { grid-template-columns: 1fr; gap: 4px; }
+  .nav-links { gap: 16px; }
+  .hero-watermark { display: none; }    /* 手机上彻底去掉水印，保持干净 */
+}
