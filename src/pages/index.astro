@@ -29,19 +29,26 @@ const vLines: string[] = [];
 for (let i = 0; i < COLS; i++) vLines.push(grid.map((row) => row[i].join(',')).join(' '));
 
 // —— 区块间的母题：一片轻微起伏的点阵 + 连线（极淡，填补留白）——
-const MC = 30, MR = 5, MW = 1100, MH = 150;
-const dots: { x: number; y: number }[] = [];
-const mLines: string[] = [];
-for (let r = 0; r < MR; r++) {
-  const rowPts: string[] = [];
-  for (let c = 0; c < MC; c++) {
-    const x = (c / (MC - 1)) * MW;
-    const y = MH / 2 + Math.sin(c * 0.5 + r * 0.9) * (6 + r * 4) + (r - MR / 2) * 16;
-    dots.push({ x: +x.toFixed(1), y: +y.toFixed(1) });
-    rowPts.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+// 同一套生成逻辑；flip 水平镜像 → 第二条母题流向与第一条相反
+const MW = 1100;
+function buildMotif(MC: number, MR: number, MH: number, flip: boolean) {
+  const dots: { x: number; y: number }[] = [];
+  const lines: string[] = [];
+  for (let r = 0; r < MR; r++) {
+    const rowPts: string[] = [];
+    for (let c = 0; c < MC; c++) {
+      let x = (c / (MC - 1)) * MW;
+      const y = MH / 2 + Math.sin(c * 0.5 + r * 0.9) * (6 + r * 4) + (r - MR / 2) * 16;
+      if (flip) x = MW - x;
+      dots.push({ x: +x.toFixed(1), y: +y.toFixed(1) });
+      rowPts.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+    }
+    lines.push(rowPts.join(' '));
   }
-  mLines.push(rowPts.join(' '));
+  return { dots, lines };
 }
+const MH = 150;
+const M1 = buildMotif(30, 5, MH, false);    // 精选 ↔ 全部；下方复用同一份数据，镜像交给 CSS
 ---
 <Base title="彭洋 Max Peng · 技术美术">
   <!-- Hero -->
@@ -78,7 +85,7 @@ for (let r = 0; r < MR; r++) {
       <Squiggle variant={0} />
     </div>
     <div class="rail-meta reveal" aria-hidden="true">
-      <span class="rail-count" id="rail-count">01 / {featured.length}</span>
+      <span class="rail-swipe"><span>向右滑动</span><span class="rail-arrow">→</span></span>
       <span class="rail-scroll"><span>SCROLL</span><span class="hero-scroll-line"></span></span>
     </div>
     <div class="featrail-wrap">
@@ -88,11 +95,11 @@ for (let r = 0; r < MR; r++) {
     </div>
   </section>
 
-  <!-- 母题分隔 -->
+  <!-- 母题分隔：精选 ↔ 全部 -->
   <div class="wrap motif reveal" aria-hidden="true">
     <svg viewBox={`0 0 ${MW} ${MH}`} xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
-      {mLines.map((pts) => <polyline class="m-line" points={pts} />)}
-      {dots.map((d) => <circle class="m-dot" cx={d.x} cy={d.y} r="2.2" />)}
+      {M1.lines.map((pts) => <polyline class="m-line" points={pts} />)}
+      {M1.dots.map((d) => <circle class="m-dot" cx={d.x} cy={d.y} r="2.2" />)}
     </svg>
   </div>
 
@@ -112,6 +119,14 @@ for (let r = 0; r < MR; r++) {
     </div>
   </section>
 
+  <!-- 母题分隔：全部 ↔ 联系我（用上方同一份线框，CSS 左右镜像 + 平移贴右）-->
+  <div class="wrap motif motif-rev reveal" aria-hidden="true">
+    <svg viewBox={`0 0 ${MW} ${MH}`} xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+      {M1.lines.map((pts) => <polyline class="m-line" points={pts} />)}
+      {M1.dots.map((d) => <circle class="m-dot" cx={d.x} cy={d.y} r="2.2" />)}
+    </svg>
+  </div>
+
   <!-- 收尾：联系 -->
   <section class="wrap closing reveal">
     <div class="section-head reveal" style="margin-bottom:18px;">
@@ -123,153 +138,161 @@ for (let r = 0; r < MR; r++) {
   </section>
 
   <script is:inline>
-    // ── 卡片 3D 磁性倾斜 ──
-    document.querySelectorAll('.card').forEach((card) => {
-      card.addEventListener('mouseenter', () => card.classList.add('is-tilting'));
-      card.addEventListener('mousemove', (e) => {
-        const r = card.getBoundingClientRect();
-        const rx = ((e.clientY - r.top)  / r.height - 0.5) * -12;
-        const ry = ((e.clientX - r.left) / r.width  - 0.5) * 10;
-        card.style.transform = `translateY(-4px) perspective(900px) rotateX(${rx.toFixed(1)}deg) rotateY(${ry.toFixed(1)}deg)`;
-      });
-      card.addEventListener('mouseleave', () => {
-        card.classList.remove('is-tilting');
-        card.style.transform = '';
-      });
-    });
+  (function () {
+    function initIndex() {
+      if (!document.querySelector('.hero')) return; // 仅在首页运行
 
-    // ── 卡片媒体内视差（图片/视频跟随光标反向位移，「窗口看场景」感）──
-    document.querySelectorAll('.card').forEach((card) => {
-      const media = card.querySelector('.card-media img, .card-media video');
-      if (!media) return;
-      card.addEventListener('mouseenter', () => { media.style.transition = 'none'; });
-      card.addEventListener('mousemove', (e) => {
-        const r = card.getBoundingClientRect();
-        const x = ((e.clientX - r.left) / r.width  - 0.5) * 10;
-        const y = ((e.clientY - r.top)  / r.height - 0.5) *  7;
-        media.style.transform = `scale(1.07) translate(${-x}px, ${-y}px)`;
-      });
-      card.addEventListener('mouseleave', () => {
-        media.style.transition = '';
-        media.style.transform = '';
-      });
-    });
+      const ctrl = new AbortController();
+      const sig  = { signal: ctrl.signal };
+      // 离开首页时自动清理所有监听器与 RAF
+      document.addEventListener('astro:before-swap', () => ctrl.abort(), { once: true });
 
-    // 拖拽精选时重置所有卡片状态，避免 pointer-events:none 导致 mouseleave 丢失
-    const railEl = document.getElementById('featrail');
-    if (railEl) {
-      railEl.addEventListener('pointerdown', () => {
-        railEl.querySelectorAll('.card').forEach((c) => {
-          c.classList.remove('is-tilting');
-          c.style.removeProperty('--card-rx');
-          c.style.removeProperty('--card-ry');
-          const m = c.querySelector('.card-media img, .card-media video');
-          if (m) m.style.transform = '';
+      // ── 卡片 3D 磁性倾斜 ──
+      document.querySelectorAll('.card').forEach((card) => {
+        card.addEventListener('mouseenter', () => card.classList.add('is-tilting'), sig);
+        card.addEventListener('mousemove', (e) => {
+          const r  = card.getBoundingClientRect();
+          const rx = ((e.clientY - r.top)  / r.height - 0.5) * -12;
+          const ry = ((e.clientX - r.left) / r.width  - 0.5) * 10;
+          card.style.transform = `translateY(-4px) perspective(900px) rotateX(${rx.toFixed(1)}deg) rotateY(${ry.toFixed(1)}deg)`;
+        }, sig);
+        card.addEventListener('mouseleave', () => { card.classList.remove('is-tilting'); card.style.transform = ''; }, sig);
+      });
+
+      // ── 卡片媒体内视差 ──
+      document.querySelectorAll('.card').forEach((card) => {
+        const media = card.querySelector('.card-media img, .card-media video');
+        if (!media) return;
+        card.addEventListener('mouseenter', () => { media.style.transition = 'none'; }, sig);
+        card.addEventListener('mousemove', (e) => {
+          const r = card.getBoundingClientRect();
+          const x = ((e.clientX - r.left) / r.width  - 0.5) * 10;
+          const y = ((e.clientY - r.top)  / r.height - 0.5) *  7;
+          media.style.transform = `scale(1.07) translate(${-x}px, ${-y}px)`;
+        }, sig);
+        card.addEventListener('mouseleave', () => { media.style.transition = ''; media.style.transform = ''; }, sig);
+      });
+
+      // 拖拽精选时重置卡片状态
+      const railEl = document.getElementById('featrail');
+      if (railEl) {
+        railEl.addEventListener('pointerdown', () => {
+          railEl.querySelectorAll('.card').forEach((c) => {
+            c.classList.remove('is-tilting'); c.style.transform = '';
+            const m = c.querySelector('.card-media img, .card-media video');
+            if (m) { m.style.transition = ''; m.style.transform = ''; }
+          });
+        }, sig);
+      }
+
+      // ── Hero + Motif 视差（lerp）──
+      const heroSec    = document.querySelector('.hero');
+      const heroVisual = document.querySelector('.hero-visual');
+      const motifSvgs  = [...document.querySelectorAll('.motif svg')].map((svg) => ({
+        svg, rev: svg.closest('.motif').classList.contains('motif-rev'),
+      }));
+      let htx = 0, hty = 0, hcx = 0, hcy = 0, mtx = 0, mcx = 0;
+      let alive = true;
+      ctrl.signal.addEventListener('abort', () => { alive = false; });
+      const tick = () => {
+        if (!alive) return;
+        hcx += (htx - hcx) * 0.055; hcy += (hty - hcy) * 0.055; mcx += (mtx - mcx) * 0.035;
+        if (heroVisual) heroVisual.style.transform = `translate(${hcx * -38}px, ${hcy * -28}px)`;
+        // 视差漂移；上方居中(left:50%)，下方贴右镜像(right:0 + scaleX(-1))，与 CSS 基态一致
+        motifSvgs.forEach((m) => {
+          const dx = (mcx * 50 * (m.rev ? 1 : -1)).toFixed(1);
+          m.svg.style.transform = m.rev
+            ? `translate(${dx}px, -50%) scaleX(-1)`
+            : `translate(calc(-50% + ${dx}px), -50%)`;
         });
-      });
-    }
-
-    // ── Hero 线框视差 + Motif 视差（lerp 惯性，有机漂移感）──
-    const heroSec    = document.querySelector('.hero');
-    const heroVisual = document.querySelector('.hero-visual');
-    const motifSvg   = document.querySelector('.motif svg');
-
-    let htx = 0, hty = 0, hcx = 0, hcy = 0;   // hero target / current
-    let mtx = 0, mcx = 0;                        // motif target / current
-
-    const tick = () => {
-      hcx += (htx - hcx) * 0.055;
-      hcy += (hty - hcy) * 0.055;
-      mcx += (mtx - mcx) * 0.035;               // motif 更慢，更飘
-      if (heroVisual) heroVisual.style.transform = `translate(${hcx * -22}px, ${hcy * -16}px)`;
-      if (motifSvg)   motifSvg.style.transform   = `translate(calc(-50% + ${mcx * -28}px), -50%)`;
+        requestAnimationFrame(tick);
+      };
       requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
+      document.addEventListener('mousemove', (e) => {
+        if (heroSec) { const r = heroSec.getBoundingClientRect(); htx = (e.clientX - r.left) / r.width - 0.5; hty = (e.clientY - r.top) / r.height - 0.5; }
+        mtx = e.clientX / window.innerWidth - 0.5;
+      }, sig);
+      document.addEventListener('mouseleave', () => { htx = 0; hty = 0; mtx = 0; }, sig);
 
-    document.addEventListener('mousemove', (e) => {
-      if (heroSec) {
-        const r = heroSec.getBoundingClientRect();
-        htx = (e.clientX - r.left) / r.width  - 0.5;
-        hty = (e.clientY - r.top)  / r.height - 0.5;
-      }
-      // motif 跟随全局鼠标横向位置
-      mtx = e.clientX / window.innerWidth - 0.5;
-    });
-    // 鼠标离开视口时缓回中心
-    document.addEventListener('mouseleave', () => { htx = 0; hty = 0; mtx = 0; });
-  </script>
+      // ── 方向筛选动画 ──
+      const buttons = document.querySelectorAll('.filter');
+      const cards   = document.querySelectorAll('#work-grid .card');
+      const pending = new WeakMap();
+      buttons.forEach((btn) => btn.addEventListener('click', () => {
+        const f = btn.getAttribute('data-filter');
+        buttons.forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        cards.forEach((c) => {
+          const show = f === '全部' || c.getAttribute('data-dir') === f;
+          const t = pending.get(c); if (t) { clearTimeout(t); pending.delete(c); }
+          if (show) {
+            c.classList.remove('is-hidden', 'card-exit'); c.classList.add('card-enter');
+            pending.set(c, setTimeout(() => c.classList.remove('card-enter'), 400));
+          } else if (!c.classList.contains('is-hidden')) {
+            c.classList.add('card-exit');
+            pending.set(c, setTimeout(() => { c.classList.add('is-hidden'); c.classList.remove('card-exit'); }, 200));
+          }
+        });
+      }, sig));
 
-  <script is:inline>
-    const buttons = document.querySelectorAll('.filter');
-    const cards = document.querySelectorAll('#work-grid .card');
-    buttons.forEach((btn) => btn.addEventListener('click', () => {
-      const f = btn.getAttribute('data-filter');
-      buttons.forEach((b) => b.classList.remove('active'));
-      btn.classList.add('active');
-      cards.forEach((c) => c.classList.toggle('is-hidden', !(f === '全部' || c.getAttribute('data-dir') === f)));
-    }));
-    // 卡片视频 hover 预览
-    document.querySelectorAll('.card-media video').forEach((v) => {
-      const card = v.closest('.card');
-      card.addEventListener('mouseenter', () => v.play().catch(() => {}));
-      card.addEventListener('mouseleave', () => { v.pause(); v.currentTime = 0; });
-    });
-    // 精选：按住卡片左右拖动滚动（不使用 pointer capture，避免吃掉卡片点击）
-    const rail = document.getElementById('featrail');
-    if (rail) {
-      let down = false, startX = 0, startLeft = 0, dragged = false;
-      const onMove = (e) => {
-        if (!down) return;
-        const dx = e.clientX - startX;
-        if (Math.abs(dx) > 6) { dragged = true; rail.classList.add('dragging'); }
-        if (dragged) { rail.scrollLeft = startLeft - dx; e.preventDefault(); }
-      };
-      const onUp = () => {
-        if (!down) return;
-        down = false;
-        rail.classList.remove('dragging');
-        window.removeEventListener('pointermove', onMove);
-        window.removeEventListener('pointerup', onUp);
-        // 拖动结束后，短暂吞掉这一次 click，避免误跳转；纯点击不会触发这里
-        if (dragged) {
-          const swallow = (ev) => { ev.preventDefault(); ev.stopPropagation(); };
-          rail.addEventListener('click', swallow, { capture: true, once: true });
-          setTimeout(() => rail.removeEventListener('click', swallow, true), 60);
-        }
-      };
-      rail.addEventListener('pointerdown', (e) => {
-        if (e.button !== 0 || e.pointerType !== 'mouse') return;  // 仅鼠标左键拖拽；触屏用原生滚动
-        down = true; dragged = false; startX = e.clientX; startLeft = rail.scrollLeft;
-        window.addEventListener('pointermove', onMove, { passive: false });
-        window.addEventListener('pointerup', onUp);
+      // ── 视频 hover 预览 ──
+      document.querySelectorAll('.card-media video').forEach((v) => {
+        const card = v.closest('.card');
+        card.addEventListener('mouseenter', () => v.play().catch(() => {}), sig);
+        card.addEventListener('mouseleave', () => { v.pause(); v.currentTime = 0; }, sig);
       });
-      rail.addEventListener('dragstart', (e) => e.preventDefault());
-      rail.addEventListener('wheel', (e) => {
-        if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { rail.scrollLeft += e.deltaY; e.preventDefault(); }
-      }, { passive: false });
-      // 计数器：随横向滚动更新当前卡片序号
-      const counter = document.getElementById('rail-count');
-      const total = rail.querySelectorAll('.card').length;
-      if (counter) {
-        const card0 = rail.querySelector('.card');
-        const step = card0 ? card0.offsetWidth + 24 : 1;
-        rail.addEventListener('scroll', () => {
-          const idx = Math.min(total, Math.round(rail.scrollLeft / step) + 1);
-          counter.textContent = String(idx).padStart(2, '0') + ' / ' + total;
-        }, { passive: true });
-      }
-    }
-    // 内容淡入：进入视口播一次后不再观察
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
-    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
-    document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
 
-    // 手绘线：每次滚动进入视口都重新绘制（离开则移除标记，回来再画）
-    const sqio = new IntersectionObserver((entries) => {
-      entries.forEach((e) => e.target.classList.toggle('draw', e.isIntersecting));
-    }, { threshold: 0.6 });
-    document.querySelectorAll('.section-head').forEach((el) => sqio.observe(el));
+      // ── 精选横向拖拽 ──
+      const rail = document.getElementById('featrail');
+      if (rail) {
+        let down = false, startX = 0, startLeft = 0, dragged = false;
+        const onMove = (e) => {
+          if (!down) return;
+          const dx = e.clientX - startX;
+          if (Math.abs(dx) > 6) { dragged = true; rail.classList.add('dragging'); }
+          if (dragged) { rail.scrollLeft = startLeft - dx; e.preventDefault(); }
+        };
+        const onUp = () => {
+          if (!down) return; down = false; rail.classList.remove('dragging');
+          window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp);
+          if (dragged) {
+            const swallow = (ev) => { ev.preventDefault(); ev.stopPropagation(); };
+            rail.addEventListener('click', swallow, { capture: true, once: true });
+            setTimeout(() => rail.removeEventListener('click', swallow, true), 60);
+          }
+        };
+        rail.addEventListener('pointerdown', (e) => {
+          if (e.button !== 0 || e.pointerType !== 'mouse') return;
+          down = true; dragged = false; startX = e.clientX; startLeft = rail.scrollLeft;
+          window.addEventListener('pointermove', onMove, { passive: false });
+          window.addEventListener('pointerup', onUp);
+        }, sig);
+        rail.addEventListener('dragstart', (e) => e.preventDefault(), sig);
+        rail.addEventListener('wheel', (e) => {
+          if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { rail.scrollLeft += e.deltaY; e.preventDefault(); }
+        }, { passive: false, ...sig });
+      }
+
+      // ── 内容淡入 & 手绘线 ──
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+      }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+      document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+
+      const sqio = new IntersectionObserver((entries) => {
+        entries.forEach((e) => e.target.classList.toggle('draw', e.isIntersecting));
+      }, { threshold: 0.6 });
+      document.querySelectorAll('.section-head').forEach((el) => sqio.observe(el));
+
+      // 离开首页时断开观察器，避免跨导航累积
+      ctrl.signal.addEventListener('abort', () => { io.disconnect(); sqio.disconnect(); });
+    }
+
+    // page-load 覆盖首次加载与每次导航；只注册一次，避免 inline 重跑累积
+    if (!window.__indexBound) {
+      window.__indexBound = true;
+      document.addEventListener('astro:page-load', initIndex);
+    }
+  })();
   </script>
 </Base>

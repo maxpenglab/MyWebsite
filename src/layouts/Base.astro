@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import { ClientRouter } from 'astro:transitions';
 interface Props { title: string; }
 const { title } = Astro.props;
 ---
@@ -10,6 +11,7 @@ const { title } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content="彭洋 Max Peng — 渲染方向技术美术作品集" />
+    <ClientRouter />
     <script is:inline>document.documentElement.classList.add('js')</script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -44,49 +46,84 @@ const { title } = Astro.props;
     <div class="cursor-dot" id="cursor-dot" aria-hidden="true"></div>
     <div class="cursor-ring" id="cursor-ring" aria-hidden="true"></div>
     <script is:inline>
-      const bar = document.getElementById('scroll-progress');
-      const hdr = document.getElementById('site-header');
-      const onScroll = () => {
-        const h = document.documentElement;
-        const p = h.scrollTop / (h.scrollHeight - h.clientHeight || 1);
-        if (bar) bar.style.transform = 'scaleX(' + Math.max(0, Math.min(1, p)) + ')';
-        if (hdr) hdr.classList.toggle('scrolled', h.scrollTop > 50);
-      };
-      window.addEventListener('scroll', onScroll, { passive: true });
-      onScroll();
+    (function () {
+      const hoverable = window.matchMedia('(hover: hover)').matches;
 
-      // 自定义光标（仅 hover 设备激活）
-      if (window.matchMedia('(hover: hover)').matches) {
-        const dot  = document.getElementById('cursor-dot');
-        const ring = document.getElementById('cursor-ring');
-        if (dot && ring) {
-          document.body.classList.add('custom-cursor');
-          let mx = -200, my = -200, rx = -200, ry = -200;
-          document.addEventListener('mousemove', (e) => {
-            mx = e.clientX; my = e.clientY;
-            dot.style.left = mx + 'px'; dot.style.top = my + 'px';
-          });
-          // 环以 lerp 弹性跟随，形成拖尾感
-          (function lerp() {
-            rx += (mx - rx) * 0.11; ry += (my - ry) * 0.11;
-            ring.style.left = rx.toFixed(1) + 'px'; ring.style.top = ry.toFixed(1) + 'px';
-            requestAnimationFrame(lerp);
-          })();
-          // hover 链接/按钮：环扩大
-          document.querySelectorAll('a, button').forEach((el) => {
-            el.addEventListener('mouseenter', () => { if (!ring.classList.contains('is-card')) ring.classList.add('is-link'); });
-            el.addEventListener('mouseleave', () => ring.classList.remove('is-link'));
-          });
-          // hover 卡片：环变圆角矩形
-          document.querySelectorAll('.card').forEach((el) => {
-            el.addEventListener('mouseenter', () => { ring.classList.remove('is-link'); ring.classList.add('is-card'); });
-            el.addEventListener('mouseleave', () => ring.classList.remove('is-card'));
-          });
-          // 离开页面时隐藏光标
-          document.addEventListener('mouseleave', () => { dot.style.opacity = '0'; ring.style.opacity = '0'; });
-          document.addEventListener('mouseenter', () => { dot.style.opacity = ''; ring.style.opacity = ''; });
-        }
+      // ── 光标：document/window 级监听 + RAF 只建一次，状态存 window，跨导航持续 ──
+      if (hoverable && !window.__cursor) {
+        const C = window.__cursor = { mx: -200, my: -200, rx: -200, ry: -200, dot: null, ring: null };
+        document.addEventListener('mousemove', (e) => {
+          C.mx = e.clientX; C.my = e.clientY;
+          if (C.dot) { C.dot.style.left = C.mx + 'px'; C.dot.style.top = C.my + 'px'; }
+        });
+        document.addEventListener('mouseover', (e) => {
+          if (!C.ring) return;
+          const card = e.target.closest('.card');
+          const link = e.target.closest('a, button');
+          C.ring.classList.toggle('is-card', !!card);
+          C.ring.classList.toggle('is-link', !card && !!link);
+        });
+        document.addEventListener('mouseout', (e) => {
+          if (C.ring && (!e.relatedTarget || !e.relatedTarget.closest('a, button, .card'))) {
+            C.ring.classList.remove('is-link', 'is-card');
+          }
+        });
+        document.addEventListener('mouseleave', () => { if (C.dot) C.dot.style.opacity = '0'; if (C.ring) C.ring.style.opacity = '0'; });
+        document.addEventListener('mouseenter', () => { if (C.dot) C.dot.style.opacity = ''; if (C.ring) C.ring.style.opacity = ''; });
+        (function loop() {
+          C.rx += (C.mx - C.rx) * 0.11; C.ry += (C.my - C.ry) * 0.11;
+          if (C.ring) { C.ring.style.left = C.rx.toFixed(1) + 'px'; C.ring.style.top = C.ry.toFixed(1) + 'px'; }
+          requestAnimationFrame(loop);
+        })();
       }
+
+      // ── 每次页面切换后重新绑定（含光标元素重抓 + custom-cursor 类重挂）──
+      let ctrl = new AbortController();
+      function pageSetup() {
+        // body 被换掉后重抓光标元素、重挂 cursor:none 类
+        if (hoverable && window.__cursor) {
+          window.__cursor.dot  = document.getElementById('cursor-dot');
+          window.__cursor.ring = document.getElementById('cursor-ring');
+          document.body.classList.add('custom-cursor');
+        }
+
+        ctrl.abort();
+        ctrl = new AbortController();
+        const sig = { signal: ctrl.signal };
+
+        // 滚动进度条 + 磁砂导航
+        const bar = document.getElementById('scroll-progress');
+        const hdr = document.getElementById('site-header');
+        const onScroll = () => {
+          const h = document.documentElement;
+          const p = h.scrollTop / (h.scrollHeight - h.clientHeight || 1);
+          if (bar) bar.style.transform = 'scaleX(' + Math.max(0, Math.min(1, p)) + ')';
+          if (hdr) hdr.classList.toggle('scrolled', h.scrollTop > 50);
+        };
+        window.addEventListener('scroll', onScroll, { passive: true, ...sig });
+        onScroll();
+
+        // 磁性按钮
+        document.querySelectorAll('.btn, .nav-cta').forEach((btn) => {
+          btn.addEventListener('mousemove', (e) => {
+            const r = btn.getBoundingClientRect();
+            btn.style.transform = `translate(${(e.clientX-(r.left+r.width/2))*.32}px,${(e.clientY-(r.top+r.height/2))*.32}px)`;
+          }, sig);
+          btn.addEventListener('mouseleave', () => { btn.style.transform = ''; }, sig);
+        });
+      }
+
+      // page-load 在首次加载与每次导航后都会触发；只注册一次，避免 inline 重跑累积
+      if (!window.__baseBound) {
+        window.__baseBound = true;
+        document.addEventListener('astro:page-load', pageSetup);
+        // ClientRouter 导航会重置 <html> 的属性，把运行时加的 js 类擦掉，
+        // 导致依赖 .js 的动画（手绘线等）失效。每次换页后立刻补回。
+        document.addEventListener('astro:after-swap', () => {
+          document.documentElement.classList.add('js');
+        });
+      }
+    })();
     </script>
 
   </body>

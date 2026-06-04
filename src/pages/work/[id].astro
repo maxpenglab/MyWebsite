@@ -13,11 +13,23 @@ const h2s = headings.filter((h) => h.depth === 2);
 const d = entry.data;
 const isPersonal = d.project === '个人作品';
 const media = d.video || d.cover || d.poster;
-// 方向色：贯穿整页主色
 const dirStyle = `--c:var(--dir-${d.direction}); --c-soft:var(--dir-${d.direction}-soft)`;
+const hasSections = h2s.length > 1;
 ---
 <Base title={`${d.title} · 彭洋 Max Peng`}>
+
+  {hasSections && (
+    <>
+      <!-- 左右侧「流场线」：延伸首页正弦位移线框的语言，多层正弦叠加成顺流而下的流线，JS 生成 + 持续流动 -->
+      <div class="case-flow case-flow-l" aria-hidden="true" style={dirStyle}
+           data-lines="5" data-amp="11" data-f1="2.0" data-f2="5.0" data-phase="0"   data-spin="0.55"></div>
+      <div class="case-flow case-flow-r" aria-hidden="true" style={dirStyle}
+           data-lines="9" data-amp="14" data-f1="2.6" data-f2="6.2" data-phase="1.6" data-spin="0.72"></div>
+    </>
+  )}
+
   <article class="wrap case" style={dirStyle}>
+    <div class="case-watermark" aria-hidden="true">{d.direction}</div>
     <a href="/#work" class="case-back">← 返回作品</a>
 
     <div class="case-metas">
@@ -40,16 +52,16 @@ const dirStyle = `--c:var(--dir-${d.direction}); --c-soft:var(--dir-${d.directio
     {media && (
       <div class="case-media">
         {d.video
-          ? <video src={d.video} poster={d.poster} controls muted loop playsinline></video>
-          : <img src={d.cover || d.poster} alt={d.title} />}
+          ? <video src={d.video} poster={d.poster} controls muted loop playsinline transition:name={`media-${entry.id}`}></video>
+          : <img src={d.cover || d.poster} alt={d.title} transition:name={`media-${entry.id}`} />}
       </div>
     )}
 
     <div class="prose"><Content /></div>
   </article>
 
-  {h2s.length > 1 && (
-    <nav class="toc" aria-label="本文目录">
+  {hasSections && (
+    <nav class="toc" aria-label="本文目录" style={dirStyle}>
       <p class="toc-label">目录</p>
       <ul>
         {h2s.map((h) => (
@@ -61,15 +73,161 @@ const dirStyle = `--c:var(--dir-${d.direction}); --c-soft:var(--dir-${d.directio
 </Base>
 
 <script is:inline>
-  const links = document.querySelectorAll('.toc-link');
-  if (links.length) {
-    const activate = (slug) => links.forEach((l) => l.classList.toggle('active', l.dataset.slug === slug));
-    const io = new IntersectionObserver(
-      (entries) => entries.forEach((e) => { if (e.isIntersecting) activate(e.target.id); }),
-      { rootMargin: '-5% 0% -72% 0%', threshold: 0 }
-    );
-    links.forEach((l) => { const el = document.getElementById(l.dataset.slug); if (el) io.observe(el); });
-    // 默认高亮第一项
-    if (links[0]) activate(links[0].dataset.slug);
+(function () {
+  const NS = 'http://www.w3.org/2000/svg';
+  const STEP = 14;   // 纵向取点间隔（px）
+
+  // 构建一组「流场线」：多条顺流而下、彼此交织的流线（首页正弦位移线框的有机版），
+  // 外加几个顺流滑动的光点节点，作为焦点细节。真实像素坐标，节点保持正圆。
+  function buildFlow(el) {
+    const N = +el.dataset.lines;
+    const amp = +el.dataset.amp, f1 = +el.dataset.f1, f2 = +el.dataset.f2;
+    const phase = +el.dataset.phase, spin = +el.dataset.spin || 0.6;
+    const r0 = el.getBoundingClientRect();
+    const W = Math.max(60, r0.width);
+    const H = window.innerHeight;
+
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.setAttribute('fill', 'none');
+    el.appendChild(svg);
+
+    const lines = [];
+    for (let k = 0; k < N; k++) {
+      const u = N > 1 ? k / (N - 1) : 0.5;
+      const pl = document.createElementNS(NS, 'polyline');
+      pl.setAttribute('class', 'flow-line');
+      svg.appendChild(pl);
+      // 中段两条更亮更粗，作为主笔触；其余为细笔触
+      const mid = 1 - Math.abs(u - 0.5) * 2;
+      pl.style.opacity = (0.14 + mid * 0.30).toFixed(3);
+      pl.style.strokeWidth = (1 + mid * 0.6).toFixed(2);
+      lines.push({
+        pl, u,
+        x0: W * (0.14 + u * 0.72),
+        ph: phase + k * 0.9,
+        fa: f1 * (0.85 + (k % 3) * 0.12),
+        fb: f2 * (0.9 + ((k + 1) % 4) * 0.08),
+        aa: amp * (0.7 + u * 0.6),
+      });
+    }
+
+    // 光点节点：附着在部分流线上，随时间顺流下滑、循环
+    const nodes = [];
+    const nCount = Math.max(2, Math.round(N / 3));
+    for (let i = 0; i < nCount; i++) {
+      const ci = document.createElementNS(NS, 'circle');
+      ci.setAttribute('class', 'flow-node');
+      ci.setAttribute('r', (1.8 + (i % 2) * 1.0).toFixed(1));
+      svg.appendChild(ci);
+      nodes.push({ ci, line: lines[(i * 2 + 1) % N], off: i / nCount, speed: 0.05 + (i % 3) * 0.02 });
+    }
+    return { el, svg, W, H, baseLeft: r0.left, baseTop: r0.top, lines, nodes, spin };
   }
+
+  // 单条流线在 yy∈[0,1] 处的 x（多层正弦 + 两端收窄）
+  function flowX(L, yy, t) {
+    const taper = Math.sin(yy * Math.PI);
+    return L.x0
+      + Math.sin(yy * Math.PI * L.fa + L.ph + t) * L.aa * taper
+      + Math.sin(yy * Math.PI * L.fb + L.ph * 1.7 + t * 1.4) * L.aa * 0.4 * taper;
+  }
+
+  // 鼠标排斥：靠近指针的点沿水平方向被推开，平滑衰减（流线在指针处「让开」）
+  const R_REPEL = 150, R2 = R_REPEL * R_REPEL, STR = 36;
+  function repelX(x, y, lcx, lcy) {
+    const ex = x - lcx, ey = y - lcy;
+    const d2 = ex * ex + ey * ey;
+    if (d2 >= R2 || d2 < 0.01) return x;
+    const f = 1 - d2 / R2;                 // 0..1
+    return x + (ex / Math.sqrt(d2)) * f * f * STR;
+  }
+
+  // cx/cy：鼠标客户端坐标；dx/dy：本面板当前漂移量（换算回本地坐标）
+  function updateFlow(m, t, cx, cy, dx, dy) {
+    const lcx = cx - (m.baseLeft + dx);    // 指针在本面板本地坐标
+    const lcy = cy - (m.baseTop + dy);
+    for (const L of m.lines) {
+      let s = '';
+      for (let y = 0; y <= m.H; y += STEP) {
+        const x = repelX(flowX(L, y / m.H, t), y, lcx, lcy);
+        s += (s ? ' ' : '') + x.toFixed(1) + ',' + y;
+      }
+      L.pl.setAttribute('points', s);
+    }
+    for (const nd of m.nodes) {
+      const yy = ((t * nd.speed + nd.off) % 1 + 1) % 1;
+      const ny = yy * m.H;
+      const x = repelX(flowX(nd.line, yy, t), ny, lcx, lcy);
+      nd.ci.setAttribute('cx', x.toFixed(1));
+      nd.ci.setAttribute('cy', ny.toFixed(1));
+      nd.ci.style.opacity = (Math.sin(yy * Math.PI) * 0.85).toFixed(3);  // 两端渐隐
+    }
+  }
+
+  function init() {
+    if (!document.querySelector('.case')) return;
+
+    const ctrl = new AbortController();
+    document.addEventListener('astro:before-swap', () => ctrl.abort(), { once: true });
+
+    // ── TOC 高亮 ──
+    const links = [...document.querySelectorAll('.toc-link')];
+    const heads = links.map((l) => document.getElementById(l.dataset.slug)).filter(Boolean);
+    if (heads.length) {
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            const idx = heads.indexOf(e.target);
+            links.forEach((l, i) => l.classList.toggle('active', i === idx));
+          }
+        });
+      }, { rootMargin: '-5% 0% -72% 0%', threshold: 0 });
+      heads.forEach((h) => io.observe(h));
+      if (links[0]) links[0].classList.add('active');
+      ctrl.signal.addEventListener('abort', () => io.disconnect());
+    }
+
+    // ── 流场线 ──
+    const elL = document.querySelector('.case-flow-l');
+    const elR = document.querySelector('.case-flow-r');
+    if (!elL || !elR) return;
+    const mL = buildFlow(elL);
+    const mR = buildFlow(elR);
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (reduce) { updateFlow(mL, 0, -9999, -9999, 0, 0); updateFlow(mR, 0, -9999, -9999, 0, 0); return; }  // 静态一帧
+
+    let mx = 0, my = 0, cx = -9999, cy = -9999, lx = 0, ly = 0, rx = 0, ry = 0, t = 0, alive = true;
+    ctrl.signal.addEventListener('abort', () => { alive = false; });
+    document.addEventListener('mousemove', (e) => {
+      mx = e.clientX / window.innerWidth - 0.5;
+      my = e.clientY / window.innerHeight - 0.5;
+      cx = e.clientX; cy = e.clientY;
+    }, { signal: ctrl.signal });
+    document.addEventListener('mouseleave', () => { cx = -9999; cy = -9999; mx = 0; my = 0; }, { signal: ctrl.signal });
+
+    const tick = () => {
+      if (!alive) return;
+      t += 0.01;
+      // 整体随鼠标视差 + 自主漂移（lerp 惯性，与首页线框一致、更明显）
+      const tlx = mx * 30 + Math.cos(t * 0.18) * 5, tly = my * 22;
+      lx += (tlx - lx) * 0.05; ly += (tly - ly) * 0.05;
+      const trx = mx * 36 + Math.sin(t * 0.2 + 1) * 5, try_ = my * 18;
+      rx += (trx - rx) * 0.055; ry += (try_ - ry) * 0.055;
+      elL.style.transform = `translate(${lx.toFixed(2)}px,${ly.toFixed(2)}px)`;
+      elR.style.transform = `translate(${rx.toFixed(2)}px,${ry.toFixed(2)}px)`;
+      // 流线持续流动（两侧速度/方向不同）+ 指针处让开
+      updateFlow(mL, t * mL.spin, cx, cy, lx, ly);
+      updateFlow(mR, -t * mR.spin + 2.0, cx, cy, rx, ry);
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+
+  if (!window.__caseBound) {
+    window.__caseBound = true;
+    document.addEventListener('astro:page-load', init);
+  }
+})();
 </script>

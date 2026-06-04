@@ -19,9 +19,9 @@ const dirStyle = `--c:var(--dir-${direction}); --c-soft:var(--dir-${direction}-s
 <a class="card reveal" style={dirStyle} href={`/work/${id}`} data-dir={direction}>
   <div class="card-media">
     {video ? (
-      <video src={video} poster={poster} muted loop playsinline preload="metadata"></video>
+      <video src={video} poster={poster} muted loop playsinline preload="metadata" transition:name={`media-${id}`}></video>
     ) : img ? (
-      <img src={img} alt={title} loading="lazy" />
+      <img src={img} alt={title} loading="lazy" transition:name={`media-${id}`} />
     ) : (
       <span class="ph">{`media: ${id}`}</span>
     )}

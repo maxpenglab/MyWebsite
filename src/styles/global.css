@@ -102,7 +102,7 @@ a { color: inherit; text-decoration: none; }
 .section-intro { color: var(--ink-soft); font-size: 15.5px; max-width: 52ch; margin: 16px auto 34px; text-align: center; }
 
 /* 首页收尾：联系区 */
-.closing { margin-top: 36px; padding: 84px 0 64px; text-align: center; border-top: 1px solid var(--line); }
+.closing { margin-top: 36px; padding: 84px 0 64px; text-align: center; }
 .closing .eyebrow { font-family: var(--font-mono); font-size: 13px; color: var(--accent); margin-bottom: 16px; }
 .closing h2 { font-family: var(--font-disp); font-size: clamp(28px, 4.5vw, 40px); font-weight: 600; letter-spacing: -.02em; margin-bottom: 16px; }
 .closing p { color: var(--ink-soft); font-size: 16.5px; max-width: 46ch; margin: 0 auto 28px; }
@@ -171,7 +171,10 @@ a { color: inherit; text-decoration: none; }
 /* 四角取景括号，像相机/视口 UI */
 /* 精选区头部的等宽小标注：计数 + SCROLL 提示，紧贴可横滑的卡片 */
 .rail-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .12em; color: var(--ink-faint); }
-.rail-count { color: var(--accent); }
+.rail-swipe { display: inline-flex; align-items: center; gap: 8px; color: var(--accent); }
+.rail-arrow { display: inline-block; animation: railnudge 1.5s cubic-bezier(.5,.05,.4,1) infinite; }
+@keyframes railnudge { 0%,100% { transform: translateX(0); opacity: .55; } 50% { transform: translateX(6px); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .rail-arrow { animation: none; opacity: .9; } }
 .rail-scroll { display: inline-flex; align-items: center; gap: 12px; }
 .hero-scroll-line { width: 54px; height: 1px; background: linear-gradient(to right, var(--accent), transparent); position: relative; overflow: hidden; display: inline-block; vertical-align: middle; }
 .hero-scroll-line::after { content: ""; position: absolute; top: 0; left: 0; width: 18px; height: 100%; background: var(--accent); animation: scrolldash 2.2s cubic-bezier(.6,.1,.3,1) infinite; }
@@ -287,6 +290,9 @@ a { color: inherit; text-decoration: none; }
 /* ============ 区块间的低调线框母题（填充留白，极淡，不抢内容）============ */
 .motif { position: relative; height: 150px; margin: 8px 0; overflow: hidden; pointer-events: none; }
 .motif svg { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(1100px, 120%); height: auto; }
+/* 下方：整块靠右（与上方靠左对称），再把上方的线框左右镜像贴到最右边 */
+.motif-rev { margin-left: auto; margin-right: 0; }
+.motif-rev svg { left: auto; right: 0; transform: translate(0, -50%) scaleX(-1); }
 .motif .m-line { fill: none; stroke: var(--accent); stroke-width: 1; opacity: .1; }
 .motif .m-dot { fill: var(--accent-2); opacity: .14; }
 @media (max-width: 560px) { .motif { height: 96px; } }
@@ -351,32 +357,100 @@ a { color: inherit; text-decoration: none; }
 .cursor-ring.is-card { width: 44px; height: 44px; border-radius: 13px; opacity: .4; }
 @media (max-width: 920px), (hover: none) { .cursor-dot, .cursor-ring { display: none !important; } }
 
-/* ============ 详情页：目录侧栏（仅宽屏显示，固定在左侧空白处）============ */
+/* ============ View Transitions 页面切换过渡 ============ */
+@keyframes vt-out { to   { opacity: 0; translate: 0 -6px; } }
+@keyframes vt-in  { from { opacity: 0; translate: 0  6px; } }
+::view-transition-old(root) { animation: vt-out .16s ease forwards; }
+::view-transition-new(root) { animation: vt-in  .26s ease .08s forwards; }
+
+/* ============ 方向筛选动效 ============ */
+.card.card-exit { opacity: 0; scale: 0.94; pointer-events: none; transition: opacity .18s ease, scale .18s ease; }
+@keyframes cardEnter { from { opacity: 0; translate: 0 10px; scale: 0.96; } to { opacity: 1; translate: 0 0; scale: 1; } }
+.card.card-enter { animation: cardEnter .32s cubic-bezier(.2,.7,.2,1) both; }
+
+/* ============ 详情页：目录侧栏 ============ */
 .toc {
   position: fixed;
-  /* 自动对齐到正文左边沿左侧：50vw = 页面中轴，减去 case 半宽(390)+gap(24)+自身宽(132) */
-  left: calc(50vw - 546px);
-  top: 148px;
-  width: 132px;
-  display: none;
-  pointer-events: auto;
+  left: calc(50vw - 600px);
+  top: 120px; width: 188px;
+  display: none; pointer-events: auto;
+  counter-reset: toc-item;
 }
-@media (min-width: 1280px) { .toc { display: block; } }
+@media (min-width: 1400px) { .toc { display: block; } }
 .toc-label {
-  font-family: var(--font-mono); font-size: 10px; letter-spacing: .12em;
-  color: var(--ink-faint); text-transform: uppercase; margin-bottom: 14px; opacity: .55;
+  font-family: var(--font-disp); font-size: 15px; font-weight: 600; letter-spacing: -.01em;
+  color: var(--c, var(--accent));
+  margin-bottom: 18px; padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
 }
 .toc ul { list-style: none; }
-.toc li + li { margin-top: 1px; }
+.toc li { counter-increment: toc-item; }
+.toc li + li { margin-top: 2px; }
 .toc-link {
-  display: block; font-family: var(--font-mono); font-size: 11px; line-height: 1.5;
-  color: var(--ink-faint); padding: 4px 0 4px 11px;
-  border-left: 1px solid rgba(242,237,225,.08);
-  transition: color .2s, border-color .2s;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  display: grid; grid-template-columns: 28px 1fr;
+  align-items: baseline;
+  font-size: 13px; line-height: 1.6;
+  color: var(--ink-faint); padding: 6px 10px 6px 0;
+  border-radius: 6px;
+  transition: color .2s, background .2s;
 }
-.toc-link:hover { color: var(--ink-soft); border-left-color: rgba(242,237,225,.18); }
-.toc-link.active { color: var(--c, var(--accent)); border-left-color: var(--c, var(--accent)); }
+.toc-link::before {
+  content: counter(toc-item, decimal-leading-zero);
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: .06em;
+  color: var(--c, var(--accent)); opacity: .45;
+  transition: opacity .2s; padding-top: 2px;
+}
+.toc-link:hover { color: var(--ink-soft); }
+.toc-link:hover::before { opacity: .75; }
+.toc-link.active {
+  color: var(--c, var(--accent));
+  background: var(--bg-3);
+  box-shadow: inset 2.5px 0 0 var(--c, var(--accent));
+  padding-left: 8px; margin-left: -8px;
+}
+.toc-link.active::before { opacity: 1; }
+
+/* 详情页侧边「流场线」：首页正弦位移线框的有机延伸，多条顺流而下、彼此交织的流线 */
+.case-flow {
+  position: fixed; top: 0; bottom: 0; z-index: 0; pointer-events: none;
+  display: none; will-change: transform;
+  /* 两端柔和渐隐，融入背景 */
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 16%, #000 84%, transparent);
+          mask-image: linear-gradient(to bottom, transparent, #000 16%, #000 84%, transparent);
+}
+@media (min-width: 1280px) { .case-flow { display: block; } }
+/* 左右非对称：左偏窄靠边，右略宽，幅度/速度/方向均不同 */
+/* 左侧贴最外侧细窄留白（避开 ≥1400px 才出现的左侧目录）；右侧留白宽，可铺满 */
+.case-flow-l { left: 0;     width: 100px; }
+.case-flow-r { right: 30px; width: 172px; }
+.case-flow svg { width: 100%; height: 100%; display: block; }
+.case-flow .flow-line {
+  fill: none; stroke: var(--c, var(--accent));
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.case-flow .flow-node {
+  fill: var(--c, var(--accent));
+  filter: drop-shadow(0 0 4px var(--c, var(--accent)));
+}
+
+/* 详情页背景装饰：方向色大字水印 + 顶部光晕 */
+.case { position: relative; overflow: hidden; }
+.case-watermark {
+  position: absolute; top: 0; right: -60px; z-index: 0;
+  font-family: var(--font-disp); font-weight: 600; line-height: .9;
+  font-size: clamp(120px, 20vw, 260px); letter-spacing: -.04em;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--c, var(--accent));
+  opacity: .055; user-select: none; pointer-events: none;
+  writing-mode: vertical-rl; text-orientation: mixed;
+}
+.case > *:not(.case-watermark) { position: relative; z-index: 1; }
+.case::before {
+  content: ''; position: absolute; top: -80px; right: -60px; z-index: 0;
+  width: 420px; height: 420px; border-radius: 50%;
+  background: radial-gradient(circle, var(--c, var(--accent)), transparent 68%);
+  opacity: .07; pointer-events: none;
+}
 
 /* ============ 响应式 ============ */
 body { overflow-x: clip; }   /* 裁掉水印溢出，避免横向滚动 */
