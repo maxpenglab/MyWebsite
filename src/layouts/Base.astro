@@ -9,8 +9,10 @@ const { title } = Astro.props;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <!-- 声明本站已是暗色主题：让 Dark Reader 等强制暗色插件默认跳过，不再二次反色 -->
+    <!-- 声明本站已是暗色主题：让浏览器原生暗色 / 简单插件不再二次反色 -->
     <meta name="color-scheme" content="dark" />
+    <!-- Dark Reader 专用锁：检测到此标签会整页跳过自己的动态反色，保留原配色 -->
+    <meta name="darkreader-lock" />
     <title>{title}</title>
     <meta name="description" content="彭洋 Max Peng — 渲染方向技术美术作品集" />
     <ClientRouter />
