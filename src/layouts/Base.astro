@@ -25,6 +25,8 @@ const { title } = Astro.props;
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
     <!-- 标题展示体 Clash Grotesk（CDN），加载失败自动回退到 Jakarta -->
     <link href="https://api.fontshare.com/v2/css?f[]=clash-grotesk@500,600&display=swap" rel="stylesheet" />
+    <!-- 各页可往 head 注入内容（如首屏 poster 预加载） -->
+    <slot name="head" />
   </head>
   <body>
     <div class="scroll-progress-track" aria-hidden="true"><span class="scroll-progress-bar" id="scroll-progress"></span></div>
