@@ -268,13 +268,7 @@ const M1 = buildMotif(30, 5, MH, false);    // 精选 ↔ 全部；下方复用�
           window.addEventListener('pointerup', onUp);
         }, sig);
         rail.addEventListener('dragstart', (e) => e.preventDefault(), sig);
-        rail.addEventListener('wheel', (e) => {
-          if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-            const max = rail.scrollWidth - rail.clientWidth;
-            const willScroll = (e.deltaY > 0 && rail.scrollLeft < max - 1) || (e.deltaY < 0 && rail.scrollLeft > 0);
-            if (willScroll) { rail.scrollLeft += e.deltaY; e.preventDefault(); }
-          }
-        }, { passive: false, ...sig });
+        // 注意：不劫持竖向滚轮。竖向滚轮始终滚页面；横向滚 rail 走触控板横扫（原生）或拖拽。
       }
 
       // ── 内容淡入 & 手绘线 ──
@@ -282,13 +276,16 @@ const M1 = buildMotif(30, 5, MH, false);    // 精选 ↔ 全部；下方复用�
         entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
       }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
       document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
-      // 兜底：字体未加载时元素高度为 0 导致 IO 漏判，两帧后补一次手动检测
-      requestAnimationFrame(() => requestAnimationFrame(() => {
+      // 同步兜底：慢设备上 IO 首次回调会被主线程饿死，卡片长时间停在 opacity:0。
+      // page-load 时布局已就绪，立即点亮视口内元素，不等 IO 异步派发（这正是“进详情页再返回就秒出”的原因）。
+      const revealInView = () => {
         document.querySelectorAll('.reveal:not(.in)').forEach((el) => {
           const r = el.getBoundingClientRect();
-          if (r.height > 0 && r.top < window.innerHeight - 40) { el.classList.add('in'); io.unobserve(el); }
+          if (r.bottom > 0 && r.top < window.innerHeight) { el.classList.add('in'); io.unobserve(el); }
         });
-      }));
+      };
+      revealInView();
+      window.addEventListener('load', revealInView, sig);
 
       const sqio = new IntersectionObserver((entries) => {
         entries.forEach((e) => e.target.classList.toggle('draw', e.isIntersecting));

@@ -95,8 +95,12 @@ a { color: inherit; text-decoration: none; }
    .js 作用域确保关闭 JS 时内容照常可见；同时尊重系统“减少动态”。 */
 .js .reveal { opacity: 0; }
 .js .reveal.in { animation: rise .7s cubic-bezier(.2,.7,.2,1) both; }
+/* 安全兜底：万一脚本被卡死/未及时点亮，1.4s 后强制显示，内容绝不会永久停在不可见。
+   一旦加上 .in，:not(.in) 不再匹配，本动画移除，交回上面的 rise 入场动画。 */
+.js .reveal:not(.in) { animation: revealSafety .01s linear 1.4s forwards; }
+@keyframes revealSafety { to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
-  .rise, .js .reveal, .js .reveal.in { animation: none !important; opacity: 1 !important; transform: none !important; }
+  .rise, .js .reveal, .js .reveal.in, .js .reveal:not(.in) { animation: none !important; opacity: 1 !important; transform: none !important; }
 }
 
 /* 区块标题下的引导语 */
