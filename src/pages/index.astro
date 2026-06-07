@@ -90,7 +90,7 @@ const M1 = buildMotif(30, 5, MH, false);    // 精选 ↔ 全部；下方复用�
     </div>
     <div class="featrail-wrap">
       <div class="featrail" id="featrail">
-        {featured.map((p, i) => <ProjectCard id={p.id} index={i} {...p.data} />)}
+        {featured.map((p, i) => <ProjectCard id={p.id} index={i} {...p.data} eager />)}
       </div>
     </div>
   </section>
@@ -269,7 +269,11 @@ const M1 = buildMotif(30, 5, MH, false);    // 精选 ↔ 全部；下方复用�
         }, sig);
         rail.addEventListener('dragstart', (e) => e.preventDefault(), sig);
         rail.addEventListener('wheel', (e) => {
-          if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { rail.scrollLeft += e.deltaY; e.preventDefault(); }
+          if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+            const max = rail.scrollWidth - rail.clientWidth;
+            const willScroll = (e.deltaY > 0 && rail.scrollLeft < max - 1) || (e.deltaY < 0 && rail.scrollLeft > 0);
+            if (willScroll) { rail.scrollLeft += e.deltaY; e.preventDefault(); }
+          }
         }, { passive: false, ...sig });
       }
 
@@ -278,6 +282,13 @@ const M1 = buildMotif(30, 5, MH, false);    // 精选 ↔ 全部；下方复用�
         entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
       }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
       document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+      // 兜底：字体未加载时元素高度为 0 导致 IO 漏判，两帧后补一次手动检测
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        document.querySelectorAll('.reveal:not(.in)').forEach((el) => {
+          const r = el.getBoundingClientRect();
+          if (r.height > 0 && r.top < window.innerHeight - 40) { el.classList.add('in'); io.unobserve(el); }
+        });
+      }));
 
       const sqio = new IntersectionObserver((entries) => {
         entries.forEach((e) => e.target.classList.toggle('draw', e.isIntersecting));

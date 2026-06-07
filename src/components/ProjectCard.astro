@@ -9,8 +9,9 @@ interface Props {
   poster?: string;
   cover?: string;
   index?: number;
+  eager?: boolean;
 }
-const { id, title, project, direction, summary, video, poster, cover, index = 0 } = Astro.props;
+const { id, title, project, direction, summary, video, poster, cover, index = 0, eager = false } = Astro.props;
 const img = cover || poster;
 const isPersonal = project === '个人作品';
 const delay = `${(index % 6) * 70}ms`;
@@ -21,7 +22,7 @@ const dirStyle = `--c:var(--dir-${direction}); --c-soft:var(--dir-${direction}-s
     {video ? (
       <video src={video} poster={poster} muted loop playsinline preload="metadata" transition:name={`media-${id}`}></video>
     ) : img ? (
-      <img src={img} alt={title} loading="lazy" transition:name={`media-${id}`} />
+      <img src={img} alt={title} loading={eager ? 'eager' : 'lazy'} transition:name={`media-${id}`} />
     ) : (
       <span class="ph">{`media: ${id}`}</span>
     )}
