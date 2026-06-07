@@ -49,14 +49,8 @@ function buildMotif(MC: number, MR: number, MH: number, flip: boolean) {
 }
 const MH = 150;
 const M1 = buildMotif(30, 5, MH, false);    // 精选 ↔ 全部；下方复用同一份数据，镜像交给 CSS
-
-// 首屏精选轨道里前几张的 poster/cover：提到 head 高优先级预加载，避免首次访问视频卡片首帧空白
-const heroPosters = featured.slice(0, 3).map((p) => p.data.poster || p.data.cover).filter(Boolean);
 ---
 <Base title="彭洋 Max Peng · 技术美术">
-  {heroPosters.map((src) => (
-    <link slot="head" rel="preload" as="image" href={src} fetchpriority="high" />
-  ))}
   <!-- Hero -->
   <section class="wrap hero">
     <div class="hero-watermark" aria-hidden="true">MAXPENG</div>
@@ -293,16 +287,17 @@ const heroPosters = featured.slice(0, 3).map((p) => p.data.poster || p.data.cove
       revealInView();
       window.addEventListener('load', revealInView, sig);
 
+      // 画一次即停（与卡片 io 一致的“一次性”模式）。
+      // 关键：不要用 toggle——否则同步点亮后被这里的回调反复增删，手绘线会被重置。
       const sqio = new IntersectionObserver((entries) => {
-        entries.forEach((e) => e.target.classList.toggle('draw', e.isIntersecting));
+        entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('draw'); sqio.unobserve(e.target); } });
       }, { threshold: 0.6 });
       document.querySelectorAll('.section-head').forEach((el) => sqio.observe(el));
       // 同步兜底：与卡片同理，慢设备上 sqio 首帧回调被饿死会导致首屏手绘线迟迟不画。
-      // page-load 时立即把视口内的区块标题点亮，不等 IO 异步派发。
       const drawInView = () => {
         document.querySelectorAll('.section-head:not(.draw)').forEach((el) => {
           const r = el.getBoundingClientRect();
-          if (r.top < window.innerHeight * 0.9 && r.bottom > 0) el.classList.add('draw');
+          if (r.top < window.innerHeight * 0.9 && r.bottom > 0) { el.classList.add('draw'); sqio.unobserve(el); }
         });
       };
       drawInView();
