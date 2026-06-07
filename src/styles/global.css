@@ -201,7 +201,11 @@ a { color: inherit; text-decoration: none; }
 .squiggle { display: block; width: 140px; height: 22px; margin: 12px auto 0; overflow: visible; }
 .squiggle .sq { stroke-dasharray: 380; stroke-dashoffset: 380; }
 .js .squiggle .sq { stroke-dashoffset: 380; }
-/* 进入视口(.draw)时绘制：sq1 左→右、sq2 随后右→左；离开则复位，下次再画 */
+/* CSS 兜底（核心）：即便首屏 JS/IO 整轮不触发，也按时间线把线画出来，绝不永久卡在“加载中”。
+   与标题/卡片的 1.4s 兜底同理——不依赖任何 JS 加的 class。 */
+.js .squiggle .sq1 { animation: sq-draw .5s cubic-bezier(.6,.05,.35,1) 1.5s forwards; }
+.js .squiggle .sq2 { animation: sq-draw .5s cubic-bezier(.6,.05,.35,1) 1.9s forwards; }
+/* JS 正常时：滚动进入视口(.draw)提前绘制（特异性更高，覆盖上面的兜底延迟）：sq1 左→右、sq2 随后右→左 */
 .js .section-head.draw .sq1 { animation: sq-draw .5s cubic-bezier(.6,.05,.35,1) .05s forwards; }
 .js .section-head.draw .sq2 { animation: sq-draw .5s cubic-bezier(.6,.05,.35,1) .5s forwards; }
 .section-head:not(.js *) .sq { stroke-dashoffset: 0; }   /* 无 JS 兜底：直接显示 */
