@@ -7,7 +7,7 @@ featured: false
 order: 9
 role: ""   # TODO 补个人职责
 tags: [Shader, 材质, 特效]
-video: https://video.maxpeng.dev/Blue.mp4?v=3
+video: https://video.maxpeng.dev/Blue.mp4
 cover: /image/Cover_Blue.webp
 poster: /image/Poster_Blue.webp
 ---
