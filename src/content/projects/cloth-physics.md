@@ -7,7 +7,7 @@ featured: true
 order: 4
 role: ""   # TODO 补个人职责
 tags: [UE, Chaos Cloth, Kawaii Physics, 碰撞]
-video: https://video.maxpeng.dev/Cloth_Game.mp4?v=2
+video: https://video.maxpeng.dev/Cloth_Game.mp4?v=3
 cover: /image/Cover_Cloth.webp
 poster: /image/Poster_Cloth.webp
 ---

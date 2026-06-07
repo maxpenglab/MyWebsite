@@ -7,7 +7,7 @@ featured: false
 order: 8
 role: ""   # TODO 补个人职责
 tags: [Shader, 透明, 特效]
-video: https://video.maxpeng.dev/Cloak.mp4?v=2
+video: https://video.maxpeng.dev/Cloak.mp4?v=3
 cover: /image/Cover_Cloak.webp
 poster: /image/Poster_Cloak.webp
 ---
