@@ -19,13 +19,15 @@ const dirStyle = `--c:var(--dir-${direction}); --c-soft:var(--dir-${direction}-s
 ---
 <a class="card reveal" style={dirStyle} href={`/work/${id}`} data-dir={direction}>
   <div class="card-media">
-    {video ? (
-      <video src={video} poster={poster} muted loop playsinline preload="none" transition:name={`media-${id}`}></video>
-    ) : img ? (
+    {img ? (
       <img src={img} alt={title} loading={eager ? 'eager' : 'lazy'} transition:name={`media-${id}`} />
+    ) : video ? (
+      <img src={poster} alt={title} loading={eager ? 'eager' : 'lazy'} transition:name={`media-${id}`} />
     ) : (
       <span class="ph">{`media: ${id}`}</span>
     )}
+    {/* 视频作为叠加层，hover 时淡入播放；首屏静态帧始终是上面那张 <img>（高优先级、秒出） */}
+    {video && <video src={video} muted loop playsinline preload="none" class="card-video" aria-hidden="true"></video>}
   </div>
   <div class="card-body">
     <h3>{title}</h3>

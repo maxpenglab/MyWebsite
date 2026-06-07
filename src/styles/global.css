@@ -261,6 +261,9 @@ a { color: inherit; text-decoration: none; }
 .card-media { position: relative; aspect-ratio: 16/10; background: #0e0c08; overflow: hidden; }
 .card-media video, .card-media img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s ease; }
 .card:hover .card-media video, .card:hover .card-media img { transform: scale(1.04); }
+/* 视频叠加层：默认透明，hover 真正开始播放后才淡入盖住静态封面 */
+.card-media .card-video { position: absolute; inset: 0; opacity: 0; transition: opacity .35s ease, transform .5s ease; }
+.card.is-playing .card-media .card-video { opacity: 1; }
 .card-media .ph { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #4a4538; font-family: var(--font-mono); font-size: 12px; }
 /* 媒体底部渐隐，让叠加的标识更清晰 */
 .card-media::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(14,12,8,.55), transparent 45%); pointer-events: none; }
