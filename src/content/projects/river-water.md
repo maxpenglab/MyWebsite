@@ -7,7 +7,7 @@ featured: true
 order: 2
 role: ""   # TODO 补个人职责
 tags: [Shader, 水体, SSR, 菲涅尔]
-video: https://video.maxpeng.dev/Water_Game.mp4
+video: https://video.maxpeng.dev/Water_Game.mp4?v=2
 cover: /image/Cover_Water.webp
 poster: /image/Poster_Water.webp
 ---
