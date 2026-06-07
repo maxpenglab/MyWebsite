@@ -165,7 +165,11 @@ const hasSections = h2s.length > 1;
   }
 
   function init() {
-    if (!document.querySelector('.case')) return;
+    const caseEl = document.querySelector('.case');
+    if (!caseEl) return;
+    // 幂等：同一页面实例只初始化一次，可安全地“既绑 astro:page-load 又首屏直接调用”
+    if (window.__caseInited === caseEl) return;
+    window.__caseInited = caseEl;
 
     const ctrl = new AbortController();
     document.addEventListener('astro:before-swap', () => ctrl.abort(), { once: true });
@@ -228,5 +232,7 @@ const hasSections = h2s.length > 1;
     window.__caseBound = true;
     document.addEventListener('astro:page-load', init);
   }
+  // 首屏直接跑一次：直接打开作品链接时 astro:page-load 可能先于本脚本注册而被错过（幂等保护避免重复）
+  init();
 })();
 </script>
