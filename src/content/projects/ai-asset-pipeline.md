@@ -7,7 +7,7 @@ featured: true
 order: 5
 role: ""   # TODO 补个人职责，并尽量补充：用了哪些工具 / 卡点 / 质量把控 / 相比传统流程提效多少 / 产出多少可用资产
 tags: [AI, 资产管线, DCC, 流程]
-cover: /image/ai-asset-pipeline.png
+cover: /image/Cover_AI.webp
 ---
 
 ## 约束与目标

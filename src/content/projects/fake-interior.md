@@ -7,8 +7,9 @@ featured: true
 order: 1
 role: ""   # TODO 补一句你的个人职责，如「独立完成方案设计、Shader 实现与美术接入流程」
 tags: [Shader, Cubemap, HLSL, 专利]
-video: /video/fake-interior.mp4
-poster: /image/fake-interior.jpg
+video: https://video.maxpeng.dev/Interior.mp4
+cover: /image/Cover_Interior.webp
+poster: /image/Poster_Interior.webp
 ---
 
 ## 约束与目标

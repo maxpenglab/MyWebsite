@@ -434,18 +434,9 @@ a { color: inherit; text-decoration: none; }
   filter: drop-shadow(0 0 4px var(--c, var(--accent)));
 }
 
-/* 详情页背景装饰：方向色大字水印 + 顶部光晕 */
+/* 详情页背景装饰：顶部光晕 */
 .case { position: relative; overflow: hidden; }
-.case-watermark {
-  position: absolute; top: 0; right: -60px; z-index: 0;
-  font-family: var(--font-disp); font-weight: 600; line-height: .9;
-  font-size: clamp(120px, 20vw, 260px); letter-spacing: -.04em;
-  color: transparent;
-  -webkit-text-stroke: 1px var(--c, var(--accent));
-  opacity: .055; user-select: none; pointer-events: none;
-  writing-mode: vertical-rl; text-orientation: mixed;
-}
-.case > *:not(.case-watermark) { position: relative; z-index: 1; }
+.case > * { position: relative; z-index: 1; }
 .case::before {
   content: ''; position: absolute; top: -80px; right: -60px; z-index: 0;
   width: 420px; height: 420px; border-radius: 50%;

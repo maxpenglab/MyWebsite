@@ -7,8 +7,9 @@ featured: true
 order: 3
 role: 个人独立项目，独立完成全部设计与实现
 tags: [Unity, Compute Shader, GPU Instancing, LOD, Async Compute]
-video: /video/tsushima-grass.mp4
-poster: /image/tsushima-grass.jpg
+video: https://video.maxpeng.dev/Grass.mp4
+cover: /image/Cover_Grass.webp
+poster: /image/Poster_Grass.webp
 ---
 
 ## 动机

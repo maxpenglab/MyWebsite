@@ -7,8 +7,9 @@ featured: false
 order: 10
 role: ""   # TODO 补个人职责
 tags: [UE, Niagara, 场景特效]
-video: /video/ue-niagara-vfx.mp4
-poster: /image/ue-niagara-vfx.jpg
+video: https://video.maxpeng.dev/VFX_Scene.mp4
+cover: /image/Cover_VFX.webp
+poster: /image/Poster_VFX.webp
 ---
 
 ## 约束与目标

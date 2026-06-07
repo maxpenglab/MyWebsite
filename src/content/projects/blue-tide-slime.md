@@ -7,8 +7,9 @@ featured: false
 order: 9
 role: ""   # TODO 补个人职责
 tags: [Shader, 材质, 特效]
-video: /video/blue-tide-slime.mp4
-poster: /image/blue-tide-slime.jpg
+video: https://video.maxpeng.dev/Blue.mp4
+cover: /image/Cover_Blue.webp
+poster: /image/Poster_Blue.webp
 ---
 
 ## 约束与目标

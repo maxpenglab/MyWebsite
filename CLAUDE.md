@@ -115,11 +115,16 @@ npm run preview  # 预览构建产物
 字段写错（如 direction 不在枚举、tags 不是数组）`npm run build` 会直接报错。
 
 **媒体怎么填**：`video/cover/poster` 都是 `z.string()`，本地路径（如 `/image/xxx.jpg`，文件放 `public/`）或完整 URL 都可以。
-- 图（cover/poster）放 `public/image/`，填 `/image/xxx.jpg`。
-- **视频放 Cloudflare R2**，`video` 填完整 URL（如 `https://media.<域名>/video/xxx.mp4`）：
-  - R2 建桶上传，开放公开访问（推荐绑自定义子域走 CDN 缓存；临时可用 `r2.dev` 公开链接，有速率限制）。
-  - `<video>` 直接播放跨域无需配 CORS；同名文件更新后在 Cloudflare Purge，或文件名带版本号。
-  - 仍按 720p / H.264 / 单个尽量 <8MB 压制；务必给 `poster` 避免白屏。
+
+**图片（cover / poster）留项目，不上 R2**：图片体积小（几十至一两百 KB），Pages 本身在 Cloudflare CDN，放仓库即可；Astro `<Image>` 优化只对 `src/` 目录生效，`public/` 图片原样输出——所以靠**导出前手动压缩**拿到等效收益，无需改项目结构。
+- 文件放 `public/image/`，frontmatter 填 `/image/xxx.jpg`（无需域名前缀）。
+- **导出规范**：cover 长边压到 ~800px；poster 保持视频同分辨率（720p = 1280×720）；格式 webp 或 jpg；单张目标 **<200KB**。
+- poster 可以直接截视频某一帧，务必提供以避免视频加载前白屏。
+
+**视频放 Cloudflare R2**，`video` 填完整 URL（当前域名 `https://video.maxpeng.dev/<文件名>.mp4`）：
+- R2 建桶上传，开放公开访问（已绑自定义子域 `video.maxpeng.dev` 走 CDN 缓存）。
+- `<video>` 直接播放跨域无需配 CORS；同名文件更新后在 Cloudflare Purge，或文件名带版本号。
+- 按 720p / H.264 / 单个尽量 <8MB 压制。
 
 ## 待办（求职前必做）
 

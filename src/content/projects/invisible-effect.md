@@ -7,8 +7,9 @@ featured: false
 order: 8
 role: ""   # TODO 补个人职责
 tags: [Shader, 透明, 特效]
-video: /video/invisible-effect.mp4
-poster: /image/invisible-effect.jpg
+video: https://video.maxpeng.dev/Cloak.mp4
+cover: /image/Cover_Cloak.webp
+poster: /image/Poster_Cloak.webp
 ---
 
 ## 约束与目标
